@@ -80,7 +80,7 @@ rotasControlePonto.put("/fecharPonto/:id", autenticarJWT, async (req, res) => {
     }
 })
 
-rotasControlePonto.get("/contarSolicitacoesEmAberto", autenticarJWT, async (req, res) => {
+rotasControlePonto.get("/contarPontosEmAberto", autenticarJWT, async (req, res) => {
     try {
         const solicitacoesAberto = await controlePonto.contarSolicitacoesEmAberto();
         return res.status(200).json({ total: solicitacoesAberto ?? 0 });

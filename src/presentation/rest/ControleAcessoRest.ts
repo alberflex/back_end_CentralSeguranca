@@ -100,7 +100,7 @@ rotasControleAcesso.put("/fecharControleAcesso/:id", async (req, res) => {
     }
 })
 
-rotasControleAcesso.get("/contarSolicitacoesEmAberto", async (req, res) => {
+rotasControleAcesso.get("/contarSolicitacoesAcessoEmAberto", async (req, res) => {
     try {
         const solicitacoesAberto = await controleAcesso.contarAcessosEmAberto();
 

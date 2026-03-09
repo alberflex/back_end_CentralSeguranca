@@ -68,7 +68,7 @@ rotasControleVeiculo.put("/editarSolicitacao/:id", async (req, res) => {
     }
 });
 
-rotasControleVeiculo.get("/contarSolicitacoesEmAberto", async (req, res) => {
+rotasControleVeiculo.get("/contarSolicitacoesVeiculosEmAberto", async (req, res) => {
     try {
         const solicitacoesAberto = await controleVeiculo.contarSolicitacaoAberto();
         return res.status(200).json({ total: solicitacoesAberto ?? 0 });
