@@ -36,7 +36,8 @@ rotasControleAcesso.delete("/deletarControleAcesso/:id", async (req, res) => {
 
 rotasControleAcesso.get("/listarControleAcesso", async (req, res) => {
     try {
-        const pontos = await controleAcesso.listarTodosControlesAcessos();
+        const { dataInicio, dataFim } = req.query;
+        const pontos = await controleAcesso.listarTodosControlesAcessos(dataInicio as string, dataFim as string);
         if (pontos) {
             res.status(200).json(pontos);
         } else {

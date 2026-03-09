@@ -14,8 +14,8 @@ export class ControleAcessoService {
         return this.controleAcessoResource.deletarControleAcesso(id);
     }
 
-    public listarTodosControlesAcessos(): Promise<ControleAcesso[]> {
-        return this.controleAcessoResource.listarTodosControleAcessos();
+    public listarTodosControlesAcessos(dataInicio?: string, dataFim?: string): Promise<ControleAcesso[]> {
+        return this.controleAcessoResource.listarTodosControleAcessos(dataInicio, dataFim);
     }
 
     public listarControleAcessoPorID(id: number): Promise<ControleAcesso | null> {

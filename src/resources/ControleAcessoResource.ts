@@ -52,10 +52,25 @@ export class ControleAcessoResource implements IControleAcessoRepository {
         }
     }
 
-    public async listarTodosControleAcessos(): Promise<ControleAcesso[]> {
+    public async listarTodosControleAcessos(dataInicio?: string, dataFim?: string): Promise<ControleAcesso[]> {
         try {
             const pool = await conexaoMSSQL();
-            const resultado = await pool.request().query(`
+            const request = pool.request();
+
+            let filtroData = "";
+            if (!dataInicio && !dataFim) {
+                filtroData = "WHERE CAST(ca.data_entrada AS DATE) = CAST(GETDATE() AS DATE)";
+            }
+            else if (dataInicio && dataFim) {
+                filtroData = "WHERE CAST(ca.data_entrada AS DATE) BETWEEN @dataInicio AND @dataFim";
+                request.input("dataInicio", dataInicio);
+                request.input("dataFim", dataFim);
+            }
+            else {
+                throw new Error("É necessário informar dataInicio e dataFim juntos.");
+            }
+
+            const resultado = await request.query(`
             SELECT 
                ca.id,
                vi.nome as nomeVisitante,
@@ -72,7 +87,9 @@ export class ControleAcessoResource implements IControleAcessoRepository {
            FROM cs_controleAcesso ca
            INNER JOIN cs_visitante vi ON vi.id = ca.idVisitante
            INNER JOIN cs_porteiro po ON po.id = ca.idPorteiroEntrada
-           INNER JOIN alb_pessoal pe ON pe.chapa = ca.responsavel;`);
+           INNER JOIN alb_pessoal pe ON pe.chapa = ca.responsavel
+           ${filtroData}
+           ;`);
             return resultado.recordset as ControleAcesso[];
         } catch (error) {
             console.error("Erro ao listar controle acesso: ", error)
@@ -161,8 +178,8 @@ export class ControleAcessoResource implements IControleAcessoRepository {
                 .query(`SELECT idVisitante FROM cs_controleAcesso WHERE id = @id`);
 
             return resultado.recordset.length > 0
-            ? resultado.recordset[0].idVisitante
-            : null;
+                ? resultado.recordset[0].idVisitante
+                : null;
         } catch (error) {
             console.error("Erro ao descobrir ID do visitante:", error);
             return null;
