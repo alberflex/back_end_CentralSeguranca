@@ -38,17 +38,24 @@ export class VeiculoResource implements IVeiculoRepository {
         }
     }
 
-    public async listarTodosVeiculos(): Promise<Veiculo[]> {
+    public async listarTodosVeiculos(placa?: string): Promise<Veiculo[]> {
         try {
             const pool = await conexaoMSSQL();
-            const resultado = await pool.request().query(
-                `SELECT * FROM cs_veiculo;`
-            )
+            const request = pool.request();
+
+            let filtro = "";
+
+            if (placa) {
+                filtro = "WHERE placa LIKE @placa";
+                request.input("placa", `%${placa}%`); 
+            }
+
+            const resultado = await request.query(`SELECT * FROM cs_veiculo ${filtro}`);
 
             return resultado.recordset as Veiculo[];
         } catch (error) {
-            console.error("Erro ao listar veiculos: ", error)
-            return []
+            console.error("Erro ao listar veículos: ", error);
+            return [];
         }
     }
 

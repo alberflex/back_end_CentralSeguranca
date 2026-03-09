@@ -30,7 +30,8 @@ rotasVeiculo.delete("/deletarVeiculo/:id", async (req, res) => {
 
 rotasVeiculo.get("/listarTodosVeiculos", async (req, res) => {
     try {
-        const veiculo = await veiculoService.listarTodosVeiculos();
+        const { placa } = req.query;
+        const veiculo = await veiculoService.listarTodosVeiculos(placa as string);
 
         if (veiculo) {
             res.status(200).json(veiculo);

@@ -109,6 +109,7 @@ export class ControleVeiculoService {
                     <div class="header">Veículo Liberado</div>
                     <div class="content">
                         <p class="text-center">Registro de liberação de frota de veículos.</p>
+                         <p><strong>Placa:</strong> ${cadastro.idResponsavelAutorizacao}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
                         <p><strong>Destino:</strong> ${cadastro.destino}</p>
@@ -128,8 +129,12 @@ export class ControleVeiculoService {
                 `;
 
             const objEmail = new EmailService();
-            await objEmail.enviarEmail('informatica@alberflex.com.br', 'Rastreio veículo', mensagemEmail);
 
+            await objEmail.enviarEmail('marcos.souza@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
+            await objEmail.enviarEmail('almox.geral@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
+            await objEmail.enviarEmail('marcio.vieira@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
+            await objEmail.enviarEmail('ivan.junior@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
+            await objEmail.enviarEmail('informatica@alberflex.com.br', 'Rastreio veículo', mensagemEmail);
             const controleCadastrado = await this.controleVeiculo.cadastrarControleVeiculo(cadastro);
             return controleCadastrado;
         } catch (erro) {

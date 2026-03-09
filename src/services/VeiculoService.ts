@@ -14,8 +14,8 @@ export class VeiculoService {
         return this.veiculoResource.deletarVeiculo(id);
     }
 
-    public listarTodosVeiculos(): Promise<Veiculo[]> {
-        return this.veiculoResource.listarTodosVeiculos();
+    public listarTodosVeiculos(placa?: string): Promise<Veiculo[]> {
+        return this.veiculoResource.listarTodosVeiculos(placa);
     }
 
     public listarVeiculoPorId(id: number): Promise<Veiculo | null> {
