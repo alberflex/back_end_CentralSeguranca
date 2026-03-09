@@ -36,8 +36,8 @@ export class ControleVeiculoService {
         return this.controleVeiculo.deletarControleVeiculo(id);
     }
 
-    public listarTodosControlesVeiculos(): Promise<ControleVeiculo[]> {
-        return this.controleVeiculo.listarTodosControlesVeiculos();
+    public listarTodosControlesVeiculos(dataInicio?: string, dataFim?: string): Promise<ControleVeiculo[]> {
+        return this.controleVeiculo.listarTodosControlesVeiculos(dataInicio, dataFim);
     }
 
     public listarControlesVeiculosPorID(id: number): Promise<ControleVeiculo | null> {

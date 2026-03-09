@@ -63,29 +63,45 @@ export class ControlePontoResource implements IControlePontoRepository {
         }
     }
 
-    public async listarTodosPontos(): Promise<ControlePonto[]> {
+    public async listarTodosPontos(dataInicio?: string, dataFim?: string): Promise<ControlePonto[]> {
         try {
             const pool = await conexaoMSSQL();
-            const resultado = await pool.request().query(
-                `
-                    SELECT 
-                        cp.id,
-                        pe.nome AS nome_colaborador,
-                        po.nome AS nome_porteiro,
-                        cp.horarioEntrada,
-                        cp.horarioSaida,
-                        cp.data
-                    FROM cs_controlePonto cp
-                    INNER JOIN alb_pessoal pe 
-                    ON LTRIM(RTRIM(cp.chapa)) = LTRIM(RTRIM(pe.chapa))
-                    INNER JOIN cs_porteiro po 
-                    ON po.id = cp.idPorteiroEntrada;
-                `
-            )
+            const request = pool.request();
+
+            let filtroData = "";
+
+            if (!dataInicio && !dataFim) {
+                filtroData = "WHERE CAST(cp.data AS DATE) = CAST(GETDATE() AS DATE)";
+            }
+            else if (dataInicio && dataFim) {
+                filtroData = "WHERE CAST(cp.data AS DATE) BETWEEN @dataInicio AND @dataFim";
+                request.input("dataInicio", dataInicio);
+                request.input("dataFim", dataFim);
+            }
+            else {
+                throw new Error("É necessário informar dataInicio e dataFim juntos.");
+            }
+
+            const resultado = await request.query(`
+            SELECT 
+                cp.id,
+                pe.nome AS nome_colaborador,
+                po.nome AS nome_porteiro,
+                cp.horarioEntrada,
+                cp.horarioSaida,
+                cp.data
+            FROM cs_controlePonto cp
+            INNER JOIN alb_pessoal pe 
+                ON LTRIM(RTRIM(cp.chapa)) = LTRIM(RTRIM(pe.chapa))
+            INNER JOIN cs_porteiro po 
+                ON po.id = cp.idPorteiroEntrada
+            ${filtroData}
+            ORDER BY cp.data DESC
+        `);
             return resultado.recordset as ControlePonto[];
         } catch (error) {
-            console.error("Erro ao listar controle ponto: ", error)
-            return []
+            console.error("Erro ao listar controle ponto: ", error);
+            return [];
         }
     }
 
@@ -140,7 +156,7 @@ export class ControlePontoResource implements IControlePontoRepository {
             const resultado = await pool.request().query(`
             SELECT COUNT(*) AS total FROM cs_controlePonto WHERE horarioSaida IS NULL`);
             const total = resultado.recordset[0]?.total ?? 0;
-            
+
             return total;
         } catch (error) {
             console.error("Erro ao contar pontos abertos:", error);

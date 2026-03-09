@@ -29,9 +29,11 @@ rotasControleVeiculo.delete("/deletarControleVeiculo/:id", async (req, res) => {
 
 rotasControleVeiculo.get("/listarTodosVeiculos", async (req, res) => {
     try {
-        const pontos = await controleVeiculo.listarTodosControlesVeiculos();
-        if (pontos) {
-            res.status(200).json(pontos);
+        const { dataInicio, dataFim } = req.query;
+
+        const veiculos = await controleVeiculo.listarTodosControlesVeiculos(dataInicio as string, dataFim as string);
+        if (veiculos) {
+            res.status(200).json(veiculos);
         } else {
             res.status(200).json([]);
         }
@@ -69,7 +71,7 @@ rotasControleVeiculo.put("/editarSolicitacao/:id", async (req, res) => {
 rotasControleVeiculo.get("/contarSolicitacoesEmAberto", async (req, res) => {
     try {
         const solicitacoesAberto = await controleVeiculo.contarSolicitacaoAberto();
-        return res.status(200).json({ total: solicitacoesAberto ?? 0 }); 
+        return res.status(200).json({ total: solicitacoesAberto ?? 0 });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ erro: "Erro ao contar solicitações em aberto" });

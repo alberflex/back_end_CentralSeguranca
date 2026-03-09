@@ -41,12 +41,14 @@ rotasControlePonto.delete("/deletarPonto/:id", autenticarJWT, async (req, res) =
 
 rotasControlePonto.get("/listarTodosPontos", autenticarJWT, async (req, res) => {
     try {
-        const pontos = await controlePonto.listarTodosPontos();
-        if (pontos) {
-            res.status(200).json(pontos);
-        } else {
-            res.status(200).json([]);
-        }
+        const { dataInicio, dataFim } = req.query;
+
+        const pontos = await controlePonto.listarTodosPontos(
+            dataInicio as string,
+            dataFim as string
+        );
+
+        res.status(200).json(pontos || []);
     } catch (err) {
         console.error("Erro ao obter ponto:", err);
         res.status(500).json({ erro: "Erro ao obter ponto" });

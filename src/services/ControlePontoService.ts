@@ -14,8 +14,8 @@ export class ControlePontoService {
         return this.controlePontoResource.deletarControlePonto(id);
     }
 
-    public listarTodosPontos(): Promise<ControlePonto[]> {
-        return this.controlePontoResource.listarTodosPontos();
+    public listarTodosPontos(dataInicio?: string, dataFim?: string): Promise<ControlePonto[]> {
+        return this.controlePontoResource.listarTodosPontos(dataInicio, dataFim);
     }
 
     public listarPontosPorID(id: number): Promise<ControlePonto | null> {
@@ -26,7 +26,7 @@ export class ControlePontoService {
         return this.controlePontoResource.fecharPonto(id);
     }
 
-    public contarSolicitacoesEmAberto(): Promise<number | null>    {
+    public contarSolicitacoesEmAberto(): Promise<number | null> {
         return this.controlePontoResource.contarPontosAberto();
     }
 }

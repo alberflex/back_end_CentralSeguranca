@@ -82,10 +82,25 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
     }
 
-    public async listarTodosControlesVeiculos(): Promise<ControleVeiculo[]> {
+    public async listarTodosControlesVeiculos(dataInicio?: string, dataFim?: string): Promise<ControleVeiculo[]> {
         try {
             const pool = await conexaoMSSQL();
-            const resultado = await pool.request().query(
+            const request = pool.request();
+
+            let filtroData = "";
+
+            if (!dataInicio && !dataFim) {
+                filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) = CAST(GETDATE() AS DATE)";
+            } else if (dataInicio && dataFim) {
+                filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) BETWEEN @dataInicio AND @dataFim";
+                request.input("dataInicio", dataInicio);
+                request.input("dataFim", dataFim);
+            }
+            else {
+                throw new Error("É necessário informar dataInicio e dataFim juntos.");
+            }
+
+            const resultado = await request.query(
                 `SELECT 
                 cv.id,
                 ve.placa,
@@ -108,6 +123,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                 ON cv.idPorteiroSaida = po.id
             INNER JOIN alb_pessoal pe 
                 ON cv.idResponsavel = pe.chapa
+            ${filtroData}
             ORDER BY
                 CASE 
                     WHEN cv.data_chegada IS NULL 
