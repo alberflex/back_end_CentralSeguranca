@@ -23,6 +23,15 @@ export class ControleVeiculoService {
                 cadastro.km_inicial_veiculo = veiculo.km_atual;
             }
 
+            const controleCadastrado = await this.controleVeiculo.cadastrarControleVeiculo(cadastro);
+            if (!controleCadastrado) return null;
+
+            const listarControleCadastrado = await this.controleVeiculo.listarControlesVeiculosPorID(controleCadastrado?.id)
+            if (!listarControleCadastrado) return null;
+
+            const nomesResponsaveis = await this.controleVeiculo.listarNomesResponsaveis(listarControleCadastrado.id);
+            if (!nomesResponsaveis) return null;
+
             const dataAtual = new Date().toLocaleString("pt-BR");
             const mensagemEmail = `
                 <!DOCTYPE html>
@@ -109,7 +118,7 @@ export class ControleVeiculoService {
                     <div class="header">Veículo Liberado</div>
                     <div class="content">
                         <p class="text-center">Registro de liberação de frota de veículos.</p>
-                         <p><strong>Placa:</strong> ${cadastro.idResponsavelAutorizacao}</p>
+                         <p><strong>Permissão:</strong> Libero pelo porteiro ${nomesResponsaveis.nome_porteiro_saida} para o ${nomesResponsaveis.nome_responsavel} e autorizado por ${nomesResponsaveis.nome_responsavel_autorizacao}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
                         <p><strong>Destino:</strong> ${cadastro.destino}</p>
@@ -135,7 +144,7 @@ export class ControleVeiculoService {
             await objEmail.enviarEmail('marcio.vieira@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
             await objEmail.enviarEmail('ivan.junior@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
             await objEmail.enviarEmail('informatica@alberflex.com.br', 'Rastreio veículo', mensagemEmail);
-            const controleCadastrado = await this.controleVeiculo.cadastrarControleVeiculo(cadastro);
+
             return controleCadastrado;
         } catch (erro) {
             console.error("Erro ao cadastrar controle de veículo:", erro);

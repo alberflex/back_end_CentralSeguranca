@@ -85,14 +85,16 @@ export class ControlePontoResource implements IControlePontoRepository {
             const resultado = await request.query(`
             SELECT 
                 cp.id,
-                pe.nome AS nome_colaborador,
+                COALESCE(pe.nome, ucp.nomeCompleto) AS nome_colaborador,
                 po.nome AS nome_porteiro,
                 cp.horarioEntrada,
                 cp.horarioSaida,
                 cp.data
             FROM cs_controlePonto cp
-            INNER JOIN alb_pessoal pe 
+            LEFT JOIN alb_pessoal pe 
                 ON LTRIM(RTRIM(cp.chapa)) = LTRIM(RTRIM(pe.chapa))
+            LEFT JOIN cs_usuarioControlePonto ucp
+                ON LTRIM(RTRIM(cp.chapa)) = LTRIM(RTRIM(ucp.chapa))
             INNER JOIN cs_porteiro po 
                 ON po.id = cp.idPorteiroEntrada
             ${filtroData}

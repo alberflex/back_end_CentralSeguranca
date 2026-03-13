@@ -2,6 +2,7 @@ import { IControleVeiculoRepository } from "../data/repositories/ControleVeiculo
 import { conexaoMSSQL } from "../db";
 import { ControleVeiculo } from "../domain";
 import { IControleVeiculo } from "../interface/IControleVeiculo";
+import { INomeControleVeiculo } from "../interface/INomeControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
 import sql from 'mssql';
 
@@ -82,6 +83,41 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
     }
 
+    public async listarNomesResponsaveis(id: number): Promise<INomeControleVeiculo | null> {
+        try {
+            const pool = await conexaoMSSQL();
+
+            const resultado = await pool.request()
+                .input("id", sql.Int, Number(id))
+                .query(`
+                    SELECT 
+                        pe.nome AS nome_responsavel,
+                        pe2.nome AS nome_responsavel_autorizacao,
+                        poSaida.nome AS nome_porteiro_saida,
+                        poEntrada.nome AS nome_porteiro_entrada
+                    FROM cs_controleVeiculo cv
+                    LEFT JOIN alb_pessoal pe 
+                        ON pe.chapa = cv.idResponsavel
+                    LEFT JOIN alb_pessoal pe2 
+                        ON pe2.chapa = cv.idResponsavelAutorizacao
+                    LEFT JOIN cs_porteiro poSaida 
+                        ON poSaida.id = cv.idPorteiroSaida
+                    LEFT JOIN cs_porteiro poEntrada 
+                        ON poEntrada.id = cv.idPorteiroEntrada
+                    WHERE cv.id =  @id
+            `);
+                
+            if (resultado.recordset.length === 0) {
+                return null;
+            }
+            console.log(resultado.recordset[0])
+            return resultado.recordset[0] as INomeControleVeiculo;
+        } catch (error: any) {
+            console.error("Erro ao listar nomes do controle de veículo:", error);
+            return null;
+        }
+    }
+
     public async listarTodosControlesVeiculos(dataInicio?: string, dataFim?: string): Promise<ControleVeiculo[]> {
         try {
             const pool = await conexaoMSSQL();
@@ -107,7 +143,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                 cv.destino,
                 cv.data_solicitacao,
                 cv.horario_saida,
-                cv.km_inicial_veiculo,
+                cv.km_inicial_veiculo as km_inicial_veiculo,
                 cv.data_chegada,
                 cv.horario_chegada,
                 cv.km_final_veiculo,
