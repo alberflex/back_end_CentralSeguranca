@@ -4,7 +4,6 @@ export interface VisitanteObject {
     cpf: string;
     empresa: string;
     caminho_foto_visitante: string | null;
-    caminho_imagem_assinatura: string | null;
 }
 
 export class Visitante {
@@ -13,7 +12,6 @@ export class Visitante {
     cpf: string;
     empresa: string;
     caminho_foto_visitante: string | null;
-    caminho_imagem_assinatura: string | null;
 
     constructor(properties: VisitanteObject) {
         this.id = properties.id;
@@ -21,7 +19,6 @@ export class Visitante {
         this.cpf = properties.cpf;
         this.empresa = properties.empresa;
         this.caminho_foto_visitante = properties.caminho_foto_visitante;
-        this.caminho_imagem_assinatura = properties.caminho_imagem_assinatura;
     }
 
     get Object(): VisitanteObject {
@@ -30,8 +27,7 @@ export class Visitante {
             nome: this.nome,
             cpf: this.cpf,
             empresa: this.empresa,
-            caminho_foto_visitante: this.caminho_foto_visitante,
-            caminho_imagem_assinatura: this.caminho_imagem_assinatura
+            caminho_foto_visitante: this.caminho_foto_visitante
         };
     }
 }

@@ -5,5 +5,5 @@ export interface IVisitanteRepository {
     listarTodosVisitantes(): Promise<Visitante[]>;
     listarVisitantePorId(id: number): Promise<Visitante | null>;
     deletarVisitante(id: number): Promise<Visitante | null>;
-    cadastrarVisitante(porteiro: IVisitante): Promise<Visitante | null>;
+    cadastrarVisitante(porteiro: IVisitante): Promise<IVisitante | null>;
 }

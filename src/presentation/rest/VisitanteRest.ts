@@ -14,7 +14,6 @@ rotasVisitante.post(
     "/cadastroVisitante",
     upload.fields([
         { name: "caminho_foto_visitante", maxCount: 1 },
-        { name: "caminho_imagem_assinatura", maxCount: 1 }
     ]),
     async (req, res) => {
         try {
@@ -27,18 +26,9 @@ rotasVisitante.post(
                 return res.status(400).json({ erro: "Foto do visitante não enviada" });
             }
 
-            acesso.caminho_foto_visitante =
-                files.caminho_foto_visitante[0].path;
+            acesso.caminho_foto_visitante = files.caminho_foto_visitante[0].path;
 
-            if (files?.caminho_imagem_assinatura) {
-                acesso.caminho_imagem_assinatura =
-                    files.caminho_imagem_assinatura[0].path;
-            } else {
-                acesso.caminho_imagem_assinatura = null;
-            }
-
-            const novoVisitante =
-                await visitanteService.cadastrarVisitante(acesso);
+            const novoVisitante = await visitanteService.cadastrarVisitante(acesso);
 
             res.status(201).json(novoVisitante);
         } catch (err) {
@@ -113,16 +103,7 @@ rotasVisitante.get("/listarVisitantePorId/:id", async (req, res) => {
             }
         }
 
-        if (visitante.caminho_imagem_assinatura) {
-            try {
-                const bufferAssinatura = await fs.promises.readFile(visitante.caminho_imagem_assinatura);
-                const extensao = path.extname(visitante.caminho_imagem_assinatura).replace(".", "");
-
-                visitante.caminho_imagem_assinatura = `data:image/${extensao};base64,${bufferAssinatura.toString("base64")}`;
-            } catch (err) {
-                console.error("Erro ao ler assinatura:", visitante.caminho_imagem_assinatura, err);
-            }
-        }
+        
         return res.status(200).json(visitante);
 
     } catch (err) {
@@ -145,17 +126,6 @@ rotasVisitante.get("/selecionaPorCPF/:CPF", async (req, res) => {
                 visitante.caminho_foto_visitante = `data:image/${extensao};base64,${bufferFoto.toString("base64")}`;
             } catch (err) {
                 console.error("Erro ao ler foto do visitante:", visitante.caminho_foto_visitante, err);
-            }
-        }
-
-        if (visitante.caminho_imagem_assinatura) {
-            try {
-                const bufferAssinatura = await fs.promises.readFile(visitante.caminho_imagem_assinatura);
-                const extensao = path.extname(visitante.caminho_imagem_assinatura).replace(".", "");
-
-                visitante.caminho_imagem_assinatura = `data:image/${extensao};base64,${bufferAssinatura.toString("base64")}`;
-            } catch (err) {
-                console.error("Erro ao ler assinatura:", visitante.caminho_imagem_assinatura, err);
             }
         }
 

@@ -8,7 +8,11 @@ export class VisitanteService {
 
     constructor() { this.visitanteResource = new VisitanteResource() }
 
-    public async cadastrarVisitanteComTermo(visitante: IVisitante, assinatura: string): Promise<Visitante | null> {
+    public async cadastrarVisitante(visitante: IVisitante): Promise<IVisitante | null> {
+        return this.visitanteResource.cadastrarVisitante(visitante);
+    }
+
+    /*public async cadastrarVisitanteComTermo(visitante: IVisitante, assinatura: string): Promise<Visitante | null> {
         const visitanteCadastrado = await this.visitanteResource.cadastrarVisitante(visitante);
         if (!visitanteCadastrado) return null;
 
@@ -18,10 +22,8 @@ export class VisitanteService {
             assinatura
         );
 
-        
-
         return visitanteCadastrado;
-    }
+    }*/
 
     private gerarHtmlTermoAceite(nome: string, cpf: string, assinaturaBase64: string): string {
         return `
@@ -53,8 +55,6 @@ export class VisitanteService {
         `;
     }
 
-    
-
     public async editarVisitante(visitante: IVisitante, id: number): Promise<Visitante | null> {
         const visitanteAtual = await this.visitanteResource.listarVisitantePorId(id);
         if (!visitanteAtual) throw new Error("Visitante não encontrado");
@@ -63,7 +63,6 @@ export class VisitanteService {
         if (!visitanteEditado) return null;
 
         if (visitante.caminho_foto_visitante && visitanteAtual.caminho_foto_visitante && visitante.caminho_foto_visitante !== visitanteAtual.caminho_foto_visitante) { removeArquivoRede(visitanteAtual.caminho_foto_visitante); }
-        if (visitante.caminho_imagem_assinatura && visitanteAtual.caminho_imagem_assinatura && visitante.caminho_imagem_assinatura !== visitanteAtual.caminho_imagem_assinatura) { removeArquivoRede(visitanteAtual.caminho_imagem_assinatura); }
 
         return visitanteEditado;
     }

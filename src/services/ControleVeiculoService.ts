@@ -118,7 +118,9 @@ export class ControleVeiculoService {
                     <div class="header">Veículo Liberado</div>
                     <div class="content">
                         <p class="text-center">Registro de liberação de frota de veículos.</p>
-                         <p><strong>Permissão:</strong> Libero pelo porteiro ${nomesResponsaveis.nome_porteiro_saida} para o ${nomesResponsaveis.nome_responsavel} e autorizado por ${nomesResponsaveis.nome_responsavel_autorizacao}</p>
+                        <p><strong>Autorização:</strong> ${nomesResponsaveis.nome_responsavel_autorizacao}</p>
+                        <p><strong>Motorista:</strong> ${nomesResponsaveis.nome_responsavel}</p>
+                        <p><strong>Portaria:</strong> ${nomesResponsaveis.nome_porteiro_saida}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
                         <p><strong>Destino:</strong> ${cadastro.destino}</p>

@@ -16,15 +16,13 @@ export class VisitanteResource implements IVisitanteRepository {
                 .input("nome", sql.VarChar, visitante.nome)
                 .input("empresa", sql.VarChar, visitante.empresa)
                 .input("caminho_foto_visitante", sql.VarChar, visitante.caminho_foto_visitante ?? null)
-                .input("caminho_imagem_assinatura", sql.VarChar, visitante.caminho_imagem_assinatura ?? null)
                 .query(`
                 UPDATE cs_visitante
                 SET
                     cpf = @cpf,
                     nome = @nome,
                     empresa = @empresa,
-                    caminho_foto_visitante = COALESCE(@caminho_foto_visitante, caminho_foto_visitante),
-                    caminho_imagem_assinatura = COALESCE(@caminho_imagem_assinatura, caminho_imagem_assinatura)
+                    caminho_foto_visitante = COALESCE(@caminho_foto_visitante, caminho_foto_visitante)
                 OUTPUT INSERTED.*
                 WHERE id = @id
             `);
@@ -37,7 +35,7 @@ export class VisitanteResource implements IVisitanteRepository {
     }
 
 
-    public async cadastrarVisitante(visitante: IVisitante): Promise<Visitante | null> {
+    public async cadastrarVisitante(visitante: IVisitante): Promise<IVisitante | null> {
         try {
             const pool = await conexaoMSSQL();
             const resultado = await pool.request()
@@ -45,13 +43,7 @@ export class VisitanteResource implements IVisitanteRepository {
                 .input("nome", sql.VarChar, visitante.nome)
                 .input("empresa", sql.VarChar, visitante.empresa)
                 .input("caminho_foto_visitante", sql.VarChar, visitante.caminho_foto_visitante)
-                .input("caminho_imagem_assinatura", sql.VarChar, visitante.caminho_imagem_assinatura)
-                .query(`
-                INSERT INTO cs_visitante (cpf, nome, empresa, caminho_foto_visitante, caminho_imagem_assinatura)
-                OUTPUT INSERTED.*
-                VALUES (@cpf, @nome, @empresa, @caminho_foto_visitante, @caminho_imagem_assinatura)
-            `);
-
+                .query(`INSERT INTO cs_visitante (cpf, nome, empresa, caminho_foto_visitante) OUTPUT INSERTED.* VALUES (@cpf, @nome, @empresa, @caminho_foto_visitante)`);
             return resultado.recordset[0] || null;
         } catch (error) {
             console.error('Erro ao cadastrar visitante:', error);

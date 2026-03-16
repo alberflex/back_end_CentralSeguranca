@@ -4,5 +4,4 @@ export interface IVisitante {
     cpf: string;
     empresa: string;
     caminho_foto_visitante: string;
-    caminho_imagem_assinatura: string;
 }
