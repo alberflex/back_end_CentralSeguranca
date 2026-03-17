@@ -41,17 +41,15 @@ rotasVisitante.post(
 
 rotasVisitante.put("/editarVisitante/:id",
     upload.fields([
-        { name: "caminho_foto_visitante", maxCount: 1 },
-        { name: "caminho_imagem_assinatura", maxCount: 1 }
+        { name: "caminho_foto_visitante", maxCount: 1 }
     ]),
     async (req, res) => {
         try {
             const acesso = req.body;
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-            if (!files?.caminho_foto_visitante || !files?.caminho_imagem_assinatura) return res.status(400).json({ erro: "Arquivos não enviados" });
+            if (!files?.caminho_foto_visitante) return res.status(400).json({ erro: "Arquivos não enviados" });
 
             acesso.caminhoImagemVisitante = files["caminho_foto_visitante"][0].path;
-            acesso.caminhoAssinaturaVisitante = files["caminho_imagem_assinatura"][0].path;
 
             const visitanteEditado = await visitanteService.editarVisitante(acesso, parseInt(req.params.id, 10));
             res.status(201).json(visitanteEditado);

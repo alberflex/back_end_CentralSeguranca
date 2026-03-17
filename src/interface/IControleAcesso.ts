@@ -15,9 +15,21 @@ export interface ControleAcesso {
 
 export interface ICadastroControleAcesso {
     idVisitante: number;
-	idPorteiroEntrada: number;
-	objetivo: string;
-	placaVeiculo: string;
-	numeroCartao: string
+    idPorteiroEntrada: number;
+    objetivo: string;
+    placaVeiculo: string;
+    numeroCartao: string
     responsavel: string;
+}
+
+export interface IEdicaoControleAcesso {
+    id: number;
+    idPorteiroEntrada: string;
+    idPorteiroSaida: string;
+    responsavel: string;
+    objetivo: string;
+    placaVeiculo: string;
+    numeroCartao: string;
+    data_saida: Date;
+    hora_saida: string;
 }

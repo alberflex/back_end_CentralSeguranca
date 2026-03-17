@@ -1,42 +1,76 @@
 import { IControleAcessoRepository } from "../data/repositories/ControleAcessoRepository";
 import { conexaoMSSQL } from "../db";
-import { ControleAcesso, ICadastroControleAcesso } from "../interface/IControleAcesso";
+import { ControleAcesso, ICadastroControleAcesso, IEdicaoControleAcesso } from "../interface/IControleAcesso";
 import sql from 'mssql';
 
 export class ControleAcessoResource implements IControleAcessoRepository {
-    public async cadastrarControlePonto(dados: ICadastroControleAcesso): Promise<ControleAcesso | null> {
+    public async cadastrarControleAcesso(dados: ICadastroControleAcesso): Promise<ControleAcesso | null> {
         try {
             const pool = await conexaoMSSQL();
+
             const dataAtual = new Date();
             const data = dataAtual.toISOString().split("T")[0];
-            function horaAtualBrasilia(): string {
-                const agora = new Date();
-                const horaBrasilia = agora.toLocaleTimeString('pt-BR', {
-                    timeZone: 'America/Sao_Paulo',
-                    hour12: false
-                });
-                return horaBrasilia;
-            }
+            const horaAtualBrasilia = new Date().toLocaleTimeString('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                hour12: false
+            });
 
             const resultado = await pool.request()
                 .input("idVisitante", sql.Int, dados.idVisitante)
                 .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
                 .input("data_entrada", sql.Date, data)
-                .input("hora_entrada", sql.VarChar, horaAtualBrasilia())
+                .input("hora_entrada", sql.VarChar(8), horaAtualBrasilia)
                 .input("objetivo", sql.VarChar(100), dados.objetivo)
                 .input("placaVeiculo", sql.VarChar(10), dados.placaVeiculo)
                 .input("numeroCartao", sql.VarChar(10), dados.numeroCartao)
                 .input("responsavel", sql.VarChar(10), dados.responsavel)
-                .query(`INSERT INTO cs_controleAcesso (idVisitante, idPorteiroEntrada, hora_entrada, data_entrada, objetivo, placaVeiculo, numeroCartao, responsavel)
-                        OUTPUT INSERTED.*
-                        VALUES (@idVisitante, @idPorteiroEntrada, @hora_entrada, @data_entrada, @objetivo, @placaVeiculo, @numeroCartao, @responsavel)
-        `);
+                .query(`
+                INSERT INTO cs_controleAcesso 
+                    (idVisitante, idPorteiroEntrada, hora_entrada, data_entrada, objetivo, placaVeiculo, numeroCartao, responsavel)
+                VALUES
+                    (@idVisitante, @idPorteiroEntrada, @hora_entrada, @data_entrada, @objetivo, @placaVeiculo, @numeroCartao, @responsavel);
+                
+                SELECT id, idVisitante, idPorteiroEntrada, hora_entrada, data_entrada, objetivo, placaVeiculo, numeroCartao, responsavel
+                FROM cs_controleAcesso
+                WHERE id = SCOPE_IDENTITY();
+            `);
 
             return resultado.recordset[0] || null;
+
         } catch (error) {
             console.error("Erro ao cadastrar controle de acesso:", error);
             return null;
         }
+    }
+
+    public async editarControleAcesso(dados: IEdicaoControleAcesso, id: number): Promise<IEdicaoControleAcesso | null> {
+        const pool = await conexaoMSSQL();
+
+        const request = pool.request()
+            .input("id", sql.Int, id)
+            .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
+            .input("objetivo", sql.VarChar(100), dados.objetivo)
+            .input("placaVeiculo", sql.VarChar(10), dados.placaVeiculo)
+            .input("numeroCartao", sql.VarChar(10), dados.numeroCartao)
+            .input("responsavel", sql.VarChar(10), dados.responsavel?.slice(0, 10))
+            .input("idPorteiroSaida", sql.Int, dados.idPorteiroSaida ?? null)
+            .input("data_saida", sql.Date, dados.data_saida ?? null)
+            .input("hora_saida", sql.VarChar(8), dados.hora_saida ?? null);
+
+        const resultado = await request.query(`
+            UPDATE cs_controleAcesso
+            SET
+                idPorteiroEntrada = @idPorteiroEntrada,
+                objetivo = @objetivo,
+                placaVeiculo = @placaVeiculo,
+                numeroCartao = @numeroCartao,
+                responsavel = @responsavel,
+                idPorteiroSaida = ISNULL(@idPorteiroSaida, idPorteiroSaida),
+                data_saida = ISNULL(@data_saida, data_saida),
+                hora_saida = ISNULL(@hora_saida, hora_saida)
+            OUTPUT INSERTED.*
+            WHERE id = @id`);
+        return resultado.recordset[0] || null;
     }
 
     public async deletarControleAcesso(id: number): Promise<ControleAcesso | null> {
@@ -71,25 +105,24 @@ export class ControleAcessoResource implements IControleAcessoRepository {
             }
 
             const resultado = await request.query(`
-            SELECT 
-               ca.id,
-               vi.nome as nomeVisitante,
-               po.nome as nomePorteiroEntrada,
-               po.nome as nomePorteiroSaida,
-               ca.data_entrada,
-               ca.hora_entrada,
-               ca.data_saida,
-               ca.hora_saida,
-               ca.objetivo,
-               ca.placaVeiculo,
-               ca.numeroCartao,
-               pe.nome as responsavel
-           FROM cs_controleAcesso ca
-           INNER JOIN cs_visitante vi ON vi.id = ca.idVisitante
-           INNER JOIN cs_porteiro po ON po.id = ca.idPorteiroEntrada
-           INNER JOIN alb_pessoal pe ON pe.chapa = ca.responsavel
-           ${filtroData}
-           ;`);
+                SELECT 
+                    ca.id,
+                    vi.nome as nomeVisitante,
+                    pe1.nome as nomePorteiroEntrada,
+                    pe2.nome as nomePorteiroSaida,
+                    ca.data_entrada,
+                    ca.hora_entrada,
+                    ca.data_saida,
+                    ca.hora_saida,
+                    ca.objetivo,
+                    ca.placaVeiculo,
+                    ca.numeroCartao,
+                    pe.nome as responsavel
+                FROM cs_controleAcesso ca
+                INNER JOIN cs_visitante vi ON vi.id = ca.idVisitante
+                INNER JOIN cs_porteiro pe1 ON pe1.id = ca.idPorteiroEntrada
+                LEFT JOIN cs_porteiro pe2 ON pe2.id = ca.idPorteiroSaida
+                LEFT JOIN alb_pessoal pe ON pe.chapa = ca.responsavel ${filtroData};`);
             return resultado.recordset as ControleAcesso[];
         } catch (error) {
             console.error("Erro ao listar controle acesso: ", error)
@@ -103,22 +136,23 @@ export class ControleAcessoResource implements IControleAcessoRepository {
             const resultado = await pool.request()
                 .input("id", sql.Int, id)
                 .query(`SELECT 
-                            ca.id,
-                            vi.nome as nomeVisitante,
-                            po.nome as nomePorteiroEntrada,
-                            po.nome as nomePorteiroSaida,
-                            ca.data_entrada,
-                            ca.hora_entrada,
-                            ca.data_saida,
-                            ca.hora_saida,
-                            ca.objetivo,
-                            ca.placaVeiculo,
-                            ca.numeroCartao,
-                            pe.nome as responsavel
-                        FROM cs_controleAcesso ca
-                        INNER JOIN cs_visitante vi ON vi.id = ca.idVisitante
-                        INNER JOIN alb_pessoal pe ON pe.chapa = ca.responsavel
-                        INNER JOIN cs_porteiro po ON po.id = ca.idPorteiroEntrada WHERE ca.id = @id`);
+                    ca.id,
+                    vi.nome as nomeVisitante,
+                    pe1.nome as nomePorteiroEntrada,
+                    pe2.nome as nomePorteiroSaida,
+                    ca.data_entrada,
+                    ca.hora_entrada,
+                    ca.data_saida,
+                    ca.hora_saida,
+                    ca.objetivo,
+                    ca.placaVeiculo,
+                    ca.numeroCartao,
+                    pe.nome as responsavel
+                FROM cs_controleAcesso ca
+                INNER JOIN cs_visitante vi ON vi.id = ca.idVisitante
+                INNER JOIN cs_porteiro pe1 ON pe1.id = ca.idPorteiroEntrada
+                LEFT JOIN cs_porteiro pe2 ON pe2.id = ca.idPorteiroSaida
+                LEFT JOIN alb_pessoal pe ON pe.chapa = ca.responsavel WHERE ca.id = @id`);
             if (resultado.recordset.length > 0) return resultado.recordset[0] as ControleAcesso;
             return null;
         } catch (error) {
@@ -130,22 +164,11 @@ export class ControleAcessoResource implements IControleAcessoRepository {
     public async fecharControleAcesso(id: number, idPorteiro: number): Promise<ControleAcesso | null> {
         const pool = await conexaoMSSQL();
         try {
-            function horaAtualBrasilia(): string {
-                const agora = new Date();
-                return agora.toLocaleTimeString('pt-BR', {
-                    timeZone: 'America/Sao_Paulo',
-                    hour12: false
-                });
-            }
 
-            const dataAtual = new Date();
-            const data = dataAtual.toISOString().split("T")[0];
 
             const resultado = await pool.request()
                 .input("id", sql.Int, id)
-                .input("idPorteiroSaida", sql.Int, idPorteiro)
-                .input("hora_saida", sql.VarChar(8), horaAtualBrasilia())
-                .input("data_saida", sql.Date, data)
+
                 .query(`UPDATE cs_controleAcesso SET idPorteiroSaida = @idPorteiroSaida, data_saida = @data_saida, hora_saida = @hora_saida OUTPUT inserted.* WHERE id = @id`);
             if (resultado.recordset && resultado.recordset.length > 0) return resultado.recordset[0] as ControleAcesso;
             return null;

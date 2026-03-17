@@ -98,14 +98,24 @@ rotasControleAcesso.put("/fecharControleAcesso/:id", async (req, res) => {
         console.error("Erro ao obter fechar o controle de acesso:", error);
         res.status(500).json({ erro: "Erro ao fechar o controle de acesso" });
     }
-})
+});
+
+rotasControleAcesso.put("/editarControleAcesso/:id", async (req, res) => {
+    try {
+        const controleAcessoFechado = await controleAcesso.editarControleAcesso(req.body, parseInt(req.params.id))
+        if (controleAcessoFechado) return res.status(200).json(controleAcessoFechado);
+        return res.status(400).json('Controle acesso não encontrado');
+    } catch (error) {
+        console.error("Erro ao obter fechar o controle de acesso:", error);
+        res.status(500).json({ erro: "Erro ao fechar o controle de acesso" });
+    }
+});
 
 rotasControleAcesso.get("/contarSolicitacoesAcessoEmAberto", async (req, res) => {
     try {
         const solicitacoesAberto = await controleAcesso.contarAcessosEmAberto();
 
         return res.status(200).json({ total: solicitacoesAberto ?? 0 });
-
     } catch (error) {
         console.error(error);
         return res.status(500).json({ erro: "Erro ao contar solicitações em aberto" });

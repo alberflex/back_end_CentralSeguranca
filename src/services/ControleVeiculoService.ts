@@ -155,11 +155,92 @@ export class ControleVeiculoService {
     }
 
     public async editarSolicitacao(id: number, dados: IControleVeiculo): Promise<ControleVeiculo | null> {
-        const verificaSolicitacaoAberta = await this.controleVeiculo.verificaSolicitacaoAberta(id);
-        if (verificaSolicitacaoAberta) {
-            return this.controleVeiculo.editarSolicitacao(id, dados);
+        try {
+            const verificaSolicitacaoAberta = await this.controleVeiculo.verificaSolicitacaoAberta(id);
+            if (!verificaSolicitacaoAberta) return null;
+
+            const veiculo = await this.veiculoResource.listarVeiculoPorId(dados.idVeiculo);
+            if (!veiculo) return null;
+
+            if (dados.km_inicial_veiculo < veiculo.km_atual) {
+                dados.km_inicial_veiculo = veiculo.km_atual;
+            }
+
+            const controleEditado = await this.controleVeiculo.editarSolicitacao(id, dados);
+            if (!controleEditado) return null;
+
+            const listarControle = await this.controleVeiculo.listarControlesVeiculosPorID(controleEditado.id);
+            if (!listarControle) return controleEditado;
+
+            const nomesResponsaveis = await this.controleVeiculo.listarNomesResponsaveis(listarControle.id);
+            if (!nomesResponsaveis) return controleEditado;
+
+            const dataAtual = new Date().toLocaleString("pt-BR");
+
+            const mensagemEmail = `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+            <meta charset="UTF-8">
+            <title>Rastreio Veículo</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f2f4f6; margin: 0; padding: 0; color: #333; }
+                .wrapper { width: 100%; padding: 20px 0; }
+                .container { max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+                .header { background-color: #007bff; color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; }
+                .content { padding: 20px; }
+                .content p { margin: 10px 0; font-size: 16px; }
+                .content p.text-center { text-align: center; font-weight: bold; font-size: 18px; }
+                .btn-container { text-align: center; margin-top: 30px; }
+                .btn { display: inline-block; padding: 12px 25px; font-size: 16px; font-weight: bold; color: #ffffff; background-color: #007bff; text-decoration: none; border-radius: 8px; transition: background-color 0.3s; }
+                .footer { text-align: center; font-size: 12px; color: #888; padding: 15px 0; background-color: #f2f4f6; }
+            </style>
+            </head>
+            <body>
+            <div class="wrapper">
+                <div class="container">
+                    <div class="header">Veículo retornado</div>
+                    <div class="content">
+                        <p class="text-center">Registro de entrada de frota de veículos.</p>
+                        <p><strong>Autorização:</strong> ${nomesResponsaveis.nome_responsavel_autorizacao}</p>
+                        <p><strong>Motorista:</strong> ${nomesResponsaveis.nome_responsavel}</p>
+                        <p><strong>Porteiro saída:</strong> ${nomesResponsaveis.nome_porteiro_saida}</p>
+                        <p><strong>Porteiro entrada:</strong> ${nomesResponsaveis.nome_porteiro_entrada}</p>
+                        <p><strong>Placa:</strong> ${veiculo.placa}</p>
+                        <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
+                        <p><strong>Destino:</strong> ${dados.destino}</p>
+                        <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
+                        <p><strong>Data:</strong> ${dataAtual}</p>
+                        <div class="btn-container">
+                            <a href="http://centralseg.alberflex.com.br:3000/" class="btn">Acessar Sistema</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">© 2026 Alberflex. Todos os direitos reservados.</div>
+            </div>
+            </body>
+            </html>
+        `;
+
+            const objEmail = new EmailService();
+
+            const destinatarios = [
+                'marcos.souza@alberflex.ind.br',
+                'almox.geral@alberflex.ind.br',
+                'marcio.vieira@alberflex.ind.br',
+                'ivan.junior@alberflex.ind.br',
+                'informatica@alberflex.com.br'
+            ];
+
+            for (const email of destinatarios) {
+                await objEmail.enviarEmail(email, 'Rastreio veículo', mensagemEmail);
+            }
+
+            return controleEditado;
+        } catch (erro) {
+            console.error("Erro ao editar controle de veículo:", erro);
+            return null;
         }
-        return null;
     }
 
     public deletarControleVeiculo(id: number): Promise<ControleVeiculo | null> {
