@@ -47,7 +47,7 @@ export class VeiculoResource implements IVeiculoRepository {
 
             if (placa) {
                 filtro = "WHERE placa LIKE @placa";
-                request.input("placa", `%${placa}%`); 
+                request.input("placa", `%${placa}%`);
             }
 
             const resultado = await request.query(`SELECT * FROM cs_veiculo ${filtro}`);
@@ -75,18 +75,23 @@ export class VeiculoResource implements IVeiculoRepository {
         }
     }
 
-    public async alteraKilometragem(id: number, novaKilomentragem: number): Promise<Veiculo | null> {
-        try {
-            const pool = await conexaoMSSQL();
-            const resultado = await pool.request()
-                .input("id", sql.Int, id)
-                .input("km_atual", sql.Numeric, novaKilomentragem)
-                .query(`UPDATE cs_veiculo SET km_atual = @km_atual WHERE id = @id`);
+    public async alteraKilometragem(idVeiculo: number, kmFinal: number) {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request()
+            .input("idVeiculo", sql.Int, idVeiculo)
+            .query("SELECT * FROM cs_veiculo WHERE id = @idVeiculo");
 
-            return resultado.recordset[0] || null;
-        } catch (error) {
-            console.log("Erro ao alterar km do veículo:", error);
-            return null;
+        if (!resultado.recordset || resultado.recordset.length === 0) {
+            throw new Error(`Veículo com id ${idVeiculo} não encontrado na alteração de km.`);
         }
+
+        const veiculo = resultado.recordset[0];
+
+        await pool.request()
+            .input("kmFinal", sql.Int, kmFinal)
+            .input("idVeiculo", sql.Int, idVeiculo)
+            .query("UPDATE cs_veiculo SET km_atual = @kmFinal WHERE id = @idVeiculo");
+
+        return veiculo;
     }
 }

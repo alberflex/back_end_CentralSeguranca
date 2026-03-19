@@ -61,7 +61,7 @@ rotasControleVeiculo.put("/editarSolicitacao/:id", async (req, res) => {
     try {
         const registroEditado = await controleVeiculo.editarSolicitacao(parseInt(req.params.id, 10), req.body);
         if (registroEditado) return res.status(201).json(registroEditado)
-        return res.status(400).json('Registro fechado. Não é possível edita-lo');
+       
     } catch (error) {
         console.error('Erro ao processar a requisição:', error);
         return res.status(500).json('Erro interno no servidor.');

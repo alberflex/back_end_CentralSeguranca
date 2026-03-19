@@ -1,10 +1,11 @@
 import { IControleVeiculoRepository } from "../data/repositories/ControleVeiculoRepository";
 import { conexaoMSSQL } from "../db";
-import { ControleVeiculo } from "../domain";
+import { ControleVeiculo, Veiculo } from "../domain";
 import { IControleVeiculo } from "../interface/IControleVeiculo";
 import { INomeControleVeiculo } from "../interface/INomeControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
 import sql from 'mssql';
+import { VeiculoResource } from "./VeiculoResource";
 
 export class ControleVeiculoResource implements IControleVeiculoRepository {
     public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo | null> {
@@ -106,7 +107,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                         ON poEntrada.id = cv.idPorteiroEntrada
                     WHERE cv.id =  @id
             `);
-                
+
             if (resultado.recordset.length === 0) {
                 return null;
             }
@@ -192,7 +193,9 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
     }
 
-    public async editarSolicitacao(id: number, dados: IControleVeiculo): Promise<ControleVeiculo | null> {
+    public async editarSolicitacao(id: number, dados: IControleVeiculo, idVeiculo: number): Promise<ControleVeiculo | null> {
+        const veiculo = new VeiculoResource();
+
         try {
             const dataAtual = new Date();
             const data = dataAtual.toISOString().split("T")[0];
@@ -216,19 +219,38 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                 .input("km_final_veiculo", sql.Numeric, dados.km_final_veiculo)
                 .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
 
-                .query(`UPDATE cs_controleVeiculo 
-                        SET destino = @destino, 
-                        idPorteiroSaida = @idPorteiroSaida,
-                        idResponsavel = @idResponsavel, 
-                        localizacao = @localizacao,
-                        idResponsavelAutorizacao = @idResponsavelAutorizacao,
-                        data_chegada = @data_chegada,
-                        horario_chegada = @horario_chegada,
-                        km_final_veiculo = @km_final_veiculo,
-                        idPorteiroEntrada = @idPorteiroEntrada
-                        OUTPUT INSERTED.*
+                .query(`
+                        UPDATE cs_controleVeiculo 
+                        SET 
+                            destino = @destino, 
+                            idPorteiroSaida = @idPorteiroSaida,
+                            idResponsavel = @idResponsavel, 
+                            localizacao = @localizacao,
+                            idResponsavelAutorizacao = @idResponsavelAutorizacao,
+                            data_chegada = @data_chegada,
+                            horario_chegada = @horario_chegada,
+                            km_final_veiculo = @km_final_veiculo,
+                            idPorteiroEntrada = @idPorteiroEntrada
+                        OUTPUT 
+                            INSERTED.id AS id,
+                            INSERTED.idVeiculo AS idVeiculo,
+                            INSERTED.destino AS destino,
+                            INSERTED.data_solicitacao AS dataSolicitacao,
+                            INSERTED.horario_saida AS horarioSaida,
+                            INSERTED.km_inicial_veiculo AS kmInicialVeiculo,
+                            INSERTED.data_chegada AS dataChegada,
+                            INSERTED.horario_chegada AS horarioChegada,
+                            INSERTED.km_final_veiculo AS kmFinalVeiculo,
+                            INSERTED.idPorteiroSaida AS idPorteiroSaida,
+                            INSERTED.idResponsavel AS idResponsavel,
+                            INSERTED.localizacao AS localizacao,
+                            INSERTED.idPorteiroEntrada AS idPorteiroEntrada,
+                            INSERTED.idResponsavelAutorizacao AS idResponsavelAutorizacao
                         WHERE id = @id`);
+
+            if (!await veiculo.alteraKilometragem(idVeiculo, dados.km_final_veiculo)) return null;
             if (!resultado.recordset[0]) return null;
+
             return resultado.recordset[0];
         } catch (error) {
             console.error(error);
@@ -241,13 +263,34 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
             const pool = await conexaoMSSQL();
             const resultado = await pool.request()
                 .input("id", sql.Int, id)
-                .query(`SELECT * FROM cs_controleVeiculo WHERE id = @id AND horario_chegada IS NULL AND data_chegada IS NULL`);
+                .query(`SELECT id, data_chegada, horario_chegada, idVeiculo FROM cs_controleVeiculo WHERE id = @id`);
 
-            if (resultado.recordset.length > 0) return resultado.recordset[0] as ControleVeiculo;
+            if (resultado.recordset.length === 0) {
+                console.log("Solicitação não encontrada para o ID:", id);
+                return null;
+            }
+
+            const registro = resultado.recordset[0];
+
+            const dataChegadaVazia =
+                registro.data_chegada === null ||
+                registro.data_chegada === undefined ||
+                registro.data_chegada === '';
+
+            const horarioChegadaVazio =
+                registro.horario_chegada === null ||
+                registro.horario_chegada === undefined ||
+                registro.horario_chegada === '';
+
+            const solicitacaoAberta = dataChegadaVazia && horarioChegadaVazio;
+
+            if (solicitacaoAberta) {
+                return registro as ControleVeiculo;
+            }
 
             return null;
         } catch (error) {
-            console.log("Erro ao verificar solicitação aberta: ", error);
+            console.log("Erro ao verificar solicitação aberta:", error);
             return null;
         }
     }

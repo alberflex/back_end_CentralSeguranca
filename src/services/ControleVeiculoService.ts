@@ -157,25 +157,55 @@ export class ControleVeiculoService {
     public async editarSolicitacao(id: number, dados: IControleVeiculo): Promise<ControleVeiculo | null> {
         try {
             const verificaSolicitacaoAberta = await this.controleVeiculo.verificaSolicitacaoAberta(id);
-            if (!verificaSolicitacaoAberta) return null;
+            if (!verificaSolicitacaoAberta) throw new Error("Solicitação já finalizada ou não encontrada.");
 
-            const veiculo = await this.veiculoResource.listarVeiculoPorId(dados.idVeiculo);
-            if (!veiculo) return null;
+            const veiculo = await this.veiculoResource.listarVeiculoPorId(verificaSolicitacaoAberta.idVeiculo);
+            if (!veiculo) throw new Error("Veículo não encontrado");
 
-            if (dados.km_inicial_veiculo < veiculo.km_atual) {
-                dados.km_inicial_veiculo = veiculo.km_atual;
+            if (dados.km_final_veiculo < veiculo.km_atual) {
+                throw new Error("Kilometragem inválida. A Kilometragem atual é maior que a final");
             }
 
-            const controleEditado = await this.controleVeiculo.editarSolicitacao(id, dados);
-            if (!controleEditado) return null;
+            const controleEditado = await this.controleVeiculo.editarSolicitacao(id, dados, veiculo.id);
+            if (!controleEditado) {
+                throw new Error("Erro ao processar a edição");
+            }
+
+            console.log(controleEditado);
 
             const listarControle = await this.controleVeiculo.listarControlesVeiculosPorID(controleEditado.id);
-            if (!listarControle) return controleEditado;
+            if (!listarControle) {
+                throw new Error("Erro ao processar a listagem de controle por veiculo");
+            }
 
             const nomesResponsaveis = await this.controleVeiculo.listarNomesResponsaveis(listarControle.id);
             if (!nomesResponsaveis) return controleEditado;
 
-            const dataAtual = new Date().toLocaleString("pt-BR");
+            function formatarDataHora(data: string | Date, hora: string | Date): string {
+                // Transformar tudo em string se for Date
+                const d = new Date(data);
+                let h = 0, m = 0;
+
+                if (typeof hora === 'string') {
+                    const [hh, mm] = hora.split(':');
+                    h = parseInt(hh);
+                    m = parseInt(mm);
+                } else if (hora instanceof Date) {
+                    h = hora.getHours();
+                    m = hora.getMinutes();
+                }
+
+                // Ajusta a data com a hora correta
+                d.setHours(h, m);
+
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            }
 
             const mensagemEmail = `
             <!DOCTYPE html>
@@ -210,7 +240,9 @@ export class ControleVeiculoService {
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
                         <p><strong>Destino:</strong> ${dados.destino}</p>
                         <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
-                        <p><strong>Data:</strong> ${dataAtual}</p>
+                        <p><strong>Km Final:</strong> ${dados.km_final_veiculo}</p>
+                        <p><strong>Data saída:</strong> ${formatarDataHora(controleEditado.dataSolicitacao, controleEditado.horarioSaida)}</p>
+                        <p><strong>Data retorno:</strong> ${formatarDataHora(controleEditado.dataChegada, controleEditado.horarioChegada)}</p>
                         <div class="btn-container">
                             <a href="http://centralseg.alberflex.com.br:3000/" class="btn">Acessar Sistema</a>
                         </div>
