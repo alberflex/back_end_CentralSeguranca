@@ -1,62 +1,66 @@
 import { Router } from "express";
 import { VeiculoService } from "../../services/VeiculoService";
-import { autenticarJWT } from "../../middleware/JWT";
+import { armazenamentoRedeMulter } from "../../utils/ArmazenamentoRede";
+import { ErroAplicacao } from "../../utils/Erros";
+import multer from "multer";
 
+const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VEICULOS");
+const upload = multer({ storage: storage });
 const rotasVeiculo = Router();
 const veiculoService = new VeiculoService();
 
 rotasVeiculo.post("/cadastroVeiculo", async (req, res) => {
     try {
-        const cadastrado = await veiculoService.cadastrarVeiculo(req.body);
-        if (cadastrado) return res.status(201).json(cadastrado);
-
-        return res.status(400).json('Erro ao cadastrar veiculo');
+        return res.status(201).json(await veiculoService.cadastrarVeiculo(req.body));
     } catch (err) {
-        console.error("Erro ao cadastrar:", err);
-        res.status(500).json({ erro: "Erro ao cadastrar veiculo" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
+rotasVeiculo.put("/editarVeiculo/:id",
+    upload.fields([{ name: "caminho_imagem_veiculo" }]),
+    async (req, res) => {
+        try {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+            if (!files?.caminho_imagem_veiculo) return res.status(400).json({ erro: "Foto do veiculo não enviada" });
+
+            const veiculos = {
+                km_atual: Number(req.body.km_atual),
+                modelo: req.body.modelo,
+                caminhoImagem: files.caminho_imagem_veiculo[0].path
+            };
+
+            return res.status(200).json(await veiculoService.editarVeiculo(veiculos, parseInt(req.params.id, 10)));
+        } catch (err) {
+            if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
+        }
+    }
+);
+
 rotasVeiculo.delete("/deletarVeiculo/:id", async (req, res) => {
     try {
-        const deletado = await veiculoService.deletarVeiculo(parseInt(req.params.id, 10));
-
-        res.status(200).json(deletado);
+        res.status(200).json(await veiculoService.deletarVeiculo(parseInt(req.params.id, 10)));
     } catch (err) {
-        console.error("Erro ao deletar:", err);
-        res.status(404).json({ erro: "Veiculo não encontrado" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
 rotasVeiculo.get("/listarTodosVeiculos", async (req, res) => {
     try {
         const { placa } = req.query;
-        const veiculo = await veiculoService.listarTodosVeiculos(placa as string);
 
-        if (veiculo) {
-            res.status(200).json(veiculo);
-        } else {
-            res.status(404).json({ erro: "Nenhum veiculo cadastrado" });
-        }
+        return res.status(200).json(await veiculoService.listarTodosVeiculos(placa as string));
     } catch (err) {
-        console.error("Erro ao obter veiculo:", err);
-        res.status(500).json({ erro: "Erro ao obter veiculo" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
-
 rotasVeiculo.get("/listarVeiculoPorId/:id", async (req, res) => {
     try {
-        const veiculo = await veiculoService.listarVeiculoPorId(parseInt(req.params.id, 10));
-
-        if (veiculo) {
-            res.status(200).json(veiculo);
-        } else {
-            res.status(404).json({ erro: "Veiculo não encontrado" });
-        }
+        return res.status(200).json(await veiculoService.listarVeiculoPorId(parseInt(req.params.id, 10)));
     } catch (err) {
-        console.error("Erro ao obter Veiculo:", err);
-        res.status(500).json({ erro: "Erro ao obter Veiculo" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 

@@ -10,4 +10,5 @@ export interface IControleVeiculoRepository {
     deletarControleVeiculo(id: number): Promise<ControleVeiculo | null>;
     verificaSolicitacaoAberta(id: number): Promise<ControleVeiculo | null>
     contarSolicitacoesVeiculosEmAberto(): Promise<number | null>
+    verificaSolicitacaoParaVeiculoAberto(idVeiculo: number): Promise<boolean>
 }

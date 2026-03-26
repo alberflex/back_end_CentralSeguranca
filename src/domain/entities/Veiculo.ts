@@ -6,8 +6,10 @@ export interface VeiculoObject {
     km_atual: number;
 }
 
+export type VeiculoUpdate = Partial<Omit<Veiculo, 'placa'>>; 
+
 export class Veiculo {
-    id: number;
+    id?: number;
     placa: string;
     modelo: string;
     caminhoImagem: string;
@@ -19,15 +21,5 @@ export class Veiculo {
         this.modelo = properties.modelo;
         this.caminhoImagem = properties.caminhoImagem;
         this.km_atual = properties.km_atual;
-    }
-
-    get Object(): VeiculoObject {
-        return {
-            id: this.id,
-            placa: this.placa,
-            modelo: this.modelo,
-            caminhoImagem: this.caminhoImagem,
-            km_atual: this.km_atual,
-        };
     }
 }

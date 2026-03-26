@@ -7,8 +7,7 @@ export function armazenamentoRedeMulter(diretorio: string) {
         destination: (req, file, cb) => { cb(null, diretorio) },
         filename: (req: any, file, cb) => {
             const ext = path.extname(file.originalname);
-            const nome = (req.body.nome || "SEM_NOME").replace(/\s+/g, "_").toUpperCase();
-            const cpf = (req.body.cpf || "SEM_CPF").replace(/\D/g, "");
+            const nome = (req.body.caminho_imagem_veiculo || "VEICULO").replace(/\s+/g, "_").toUpperCase();
 
             const agora = new Date();
             const dataHora =
@@ -20,14 +19,11 @@ export function armazenamentoRedeMulter(diretorio: string) {
                 String(agora.getSeconds()).padStart(2, "0");
 
             let tipo = "arquivo";
-            if (file.fieldname === "caminho_foto_visitante") {
+            if (file.fieldname === "caminho_imagem_veiculo") {
                 tipo = "FOTO";
             }
-            if (file.fieldname === "caminho_imagem_assinatura") {
-                tipo = "ASSINATURA";
-            }
 
-            const nomeArquivo = `${nome}_${cpf}_${tipo}_${dataHora}${ext}`;
+            const nomeArquivo = `${nome}_${tipo}_${dataHora}${ext}`;
             cb(null, nomeArquivo);
         }
     });

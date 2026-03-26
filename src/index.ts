@@ -11,6 +11,7 @@ import rotasPorteiro from "./presentation/rest/PorteiroRest";
 import rotasUsuarioPonto from "./presentation/rest/UsuarioPontoRest";
 import rotasPessoal from "./presentation/rest/PessoalRest";
 import { logRequestDetails } from "./middleware/logRequestDetails";
+import { auditMiddleware } from "./middleware/log";
 
 dotenv.config();
 
@@ -22,8 +23,8 @@ app.use(express.json());
 app.use(requestLogger); 
 app.use(logRequestDetails); 
 
-app.listen(port, () => { console.log(`Servidor rodando em http://localhost:${port}`); });
 
+app.listen(port, () => { console.log(`Servidor rodando em http://localhost:${port}`); });
 app.use("/porteiro", rotasPorteiro);
 app.use("/veiculo", rotasVeiculo);
 app.use("/visitante", rotasVisitante);
@@ -32,5 +33,6 @@ app.use("/controleVeiculo", rotasControleVeiculo);
 app.use("/controleAcesso", rotasControleAcesso);
 app.use("/usuarioPonto", rotasUsuarioPonto);
 app.use("/pessoal", rotasPessoal);
+
 
 export default app;

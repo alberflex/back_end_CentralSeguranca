@@ -1,9 +1,10 @@
 import { IVeiculoRepository } from "../data/repositories/VeiculoRepository";
-import { Veiculo } from "../domain";
+import { Veiculo, VeiculoUpdate } from "../domain";
 import { conexaoMSSQL } from "../db";
 import sql from 'mssql';
 
 export class VeiculoResource implements IVeiculoRepository {
+    
     public async cadastrarVeiculo(veiculo: Veiculo): Promise<Veiculo | null> {
         try {
             const pool = await conexaoMSSQL();
@@ -23,19 +24,36 @@ export class VeiculoResource implements IVeiculoRepository {
         }
     }
 
-    public async deletarVeiculo(id: number): Promise<Veiculo | null> {
+    public async editarVeiculo(veiculo: VeiculoUpdate, id: number): Promise<VeiculoUpdate | null> {
+
         try {
             const pool = await conexaoMSSQL();
-            const verificaExistente = await this.listarVeiculoPorId(id);
-            if (verificaExistente) {
-                const resultado = await pool.request().input("id", sql.Int, id).query(`DELETE FROM cs_veiculo WHERE id = @id`);
-                if (resultado.recordset.length > 0) return verificaExistente as Veiculo;
-            }
-            return null;
+            await pool.request()
+                .input("id", sql.Int, id)
+                .input("caminho_imagem_veiculo", sql.VarChar, veiculo.caminhoImagem)
+                .input("km_atual", sql.Int, veiculo.km_atual)
+                .input("modelo", sql.VarChar, veiculo.modelo)
+                .query(`
+                UPDATE cs_veiculo 
+                SET 
+                    caminho_imagem_veiculo = @caminho_imagem_veiculo,
+                    km_atual = @km_atual,
+                    modelo = @modelo
+                WHERE id = @id
+            `);
+
+            return veiculo;
         } catch (error) {
-            console.error("Erro ao deletar veiculo: ", error);
+            console.error("Erro ao editar veiculo", error);
             return null;
         }
+    }
+
+    public async deletarVeiculo(id: number): Promise<Veiculo> {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request().input("id", sql.Int, id).query(`DELETE FROM cs_veiculo OUTPUT DELETED.* WHERE id = @id`);
+
+        return resultado.recordset?.[0] as Veiculo;
     }
 
     public async listarTodosVeiculos(placa?: string): Promise<Veiculo[]> {

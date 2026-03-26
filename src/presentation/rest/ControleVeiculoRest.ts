@@ -1,59 +1,41 @@
 import { Router } from "express";
 import { ControleVeiculoService } from "../../services/ControleVeiculoService";
 import { autenticarJWT } from "../../middleware/JWT";
+import { ErroAplicacao } from "../../utils/Erros";
 
 const rotasControleVeiculo = Router();
 const controleVeiculo = new ControleVeiculoService();
 
 rotasControleVeiculo.post("/cadastroControleVeiculo", autenticarJWT, async (req, res) => {
     try {
-        const cadastrado = await controleVeiculo.cadastrarControleVeiculo(req.body);
-        if (cadastrado) return res.status(201).json(cadastrado);
-        return res.status(400).json('Erro ao cadastrar o ponto');
+        return res.status(201).json(await controleVeiculo.cadastrarControleVeiculo(req.body));
     } catch (err) {
-        console.error("Erro ao cadastrar:", err);
-        res.status(500).json({ erro: "Erro ao cadastrar ponto" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
 rotasControleVeiculo.delete("/deletarControleVeiculo/:id", async (req, res) => {
     try {
-        const deletado = await controleVeiculo.deletarControleVeiculo(parseInt(req.params.id, 10));
-        if (!deletado) { return res.status(404).json({ erro: "Registro não encontrado ou já deletado" }); }
-        return res.status(200).json(deletado);
-    } catch (err: any) {
-        console.error("Erro ao deletar:", err);
-        return res.status(500).json({ erro: err.message || "Erro ao deletar ponto" });
+        return res.status(200).json(await controleVeiculo.deletarControleVeiculo(parseInt(req.params.id, 10)));
+    } catch (err) {
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
 rotasControleVeiculo.get("/listarTodosVeiculos", async (req, res) => {
     try {
         const { dataInicio, dataFim } = req.query;
-
-        const veiculos = await controleVeiculo.listarTodosControlesVeiculos(dataInicio as string, dataFim as string);
-        if (veiculos) {
-            res.status(200).json(veiculos);
-        } else {
-            res.status(200).json([]);
-        }
+        return res.status(200).json(await controleVeiculo.listarTodosControlesVeiculos(dataInicio as string, dataFim as string));
     } catch (err) {
-        console.error("Erro ao obter todas solicitacoes veiculos:", err);
-        res.status(500).json({ erro: "Erro ao obter todas solicitacoes veiculos" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
 rotasControleVeiculo.get("/listarVeiculoPorId/:id", async (req, res) => {
     try {
-        const ponto = await controleVeiculo.listarControlesVeiculosPorID(parseInt(req.params.id, 10));
-        if (ponto) {
-            res.status(200).json(ponto);
-        } else {
-            res.status(404).json([]);
-        }
+        return res.status(200).json(await controleVeiculo.listarControlesVeiculosPorID(parseInt(req.params.id, 10)))
     } catch (err) {
-        console.error("Erro ao obter controle de veiculo:", err);
-        res.status(500).json({ erro: "Erro ao obter controle de veiculo" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
@@ -61,7 +43,7 @@ rotasControleVeiculo.put("/editarSolicitacao/:id", async (req, res) => {
     try {
         const registroEditado = await controleVeiculo.editarSolicitacao(parseInt(req.params.id, 10), req.body);
         if (registroEditado) return res.status(201).json(registroEditado)
-       
+
     } catch (error) {
         console.error('Erro ao processar a requisição:', error);
         return res.status(500).json('Erro interno no servidor.');

@@ -1,9 +1,10 @@
 import { ControleVeiculo } from "../domain";
-import { IControleVeiculo, IEditacaoSolicitacao } from "../interface/IControleVeiculo";
+import { IControleVeiculo } from "../interface/IControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
 import { ControleVeiculoResource } from "../resources/ControleVeiculoResource";
 import { VeiculoResource } from "../resources/VeiculoResource";
 import { EmailService } from "../utils/Email";
+import { ErroAplicacao } from "../utils/Erros";
 
 export class ControleVeiculoService {
     private controleVeiculo: ControleVeiculoResource;
@@ -14,23 +15,24 @@ export class ControleVeiculoService {
         this.veiculoResource = new VeiculoResource();
     }
 
-    public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo | null> {
+    public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo> {
         try {
             const veiculo = await this.veiculoResource.listarVeiculoPorId(cadastro.idVeiculo);
-            if (!veiculo) return null;
+            if (!veiculo) throw new ErroAplicacao("Veículo não encontrado", 404);
 
-            if (cadastro.km_inicial_veiculo < veiculo.km_atual) {
-                cadastro.km_inicial_veiculo = veiculo.km_atual;
-            }
+            const verificaRegistroAberto = await this.controleVeiculo.verificaSolicitacaoParaVeiculoAberto(veiculo.id!);
+            if (verificaRegistroAberto) throw new ErroAplicacao("O veículo tem registro em aberto", 400);
+
+            if (cadastro.km_inicial_veiculo < veiculo.km_atual) { cadastro.km_inicial_veiculo = veiculo.km_atual }
 
             const controleCadastrado = await this.controleVeiculo.cadastrarControleVeiculo(cadastro);
-            if (!controleCadastrado) return null;
+            if (!controleCadastrado) throw new ErroAplicacao("Falha ao cadastrar controle do veículo", 500);
 
-            const listarControleCadastrado = await this.controleVeiculo.listarControlesVeiculosPorID(controleCadastrado?.id)
-            if (!listarControleCadastrado) return null;
+            const listarControleCadastrado = await this.controleVeiculo.listarControlesVeiculosPorID(controleCadastrado.id);
+            if (!listarControleCadastrado) throw new ErroAplicacao("Falha ao obter controle cadastrado", 500);
 
             const nomesResponsaveis = await this.controleVeiculo.listarNomesResponsaveis(listarControleCadastrado.id);
-            if (!nomesResponsaveis) return null;
+            if (!nomesResponsaveis) throw new ErroAplicacao("Falha ao listar responsáveis", 500);
 
             const dataAtual = new Date().toLocaleString("pt-BR");
             const mensagemEmail = `
@@ -140,17 +142,20 @@ export class ControleVeiculoService {
                 `;
 
             const objEmail = new EmailService();
+            const emails = [
+                'marcos.souza@alberflex.ind.br',
+                'almox.geral@alberflex.ind.br',
+                'marcio.vieira@alberflex.ind.br',
+                'ivan.junior@alberflex.ind.br',
+                'informatica@alberflex.com.br'
+            ];
 
-            await objEmail.enviarEmail('marcos.souza@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
-            await objEmail.enviarEmail('almox.geral@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
-            await objEmail.enviarEmail('marcio.vieira@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
-            await objEmail.enviarEmail('ivan.junior@alberflex.ind.br', 'Rastreio veículo', mensagemEmail);
-            await objEmail.enviarEmail('informatica@alberflex.com.br', 'Rastreio veículo', mensagemEmail);
+            for (const email of emails) await objEmail.enviarEmail(email, 'Rastreio veículo', mensagemEmail);
 
             return controleCadastrado;
         } catch (erro) {
-            console.error("Erro ao cadastrar controle de veículo:", erro);
-            return null;
+            if (erro instanceof ErroAplicacao) throw erro;
+            throw new ErroAplicacao("Erro interno ao cadastrar controle de veículo", 500);
         }
     }
 
@@ -166,12 +171,10 @@ export class ControleVeiculoService {
                 throw new Error("Kilometragem inválida. A Kilometragem atual é maior que a final");
             }
 
-            const controleEditado = await this.controleVeiculo.editarSolicitacao(id, dados, veiculo.id);
+            const controleEditado = await this.controleVeiculo.editarSolicitacao(id, dados, veiculo.id!);
             if (!controleEditado) {
                 throw new Error("Erro ao processar a edição");
             }
-
-            console.log(controleEditado);
 
             const listarControle = await this.controleVeiculo.listarControlesVeiculosPorID(controleEditado.id);
             if (!listarControle) {
@@ -182,7 +185,6 @@ export class ControleVeiculoService {
             if (!nomesResponsaveis) return controleEditado;
 
             function formatarDataHora(data: string | Date, hora: string | Date): string {
-                // Transformar tudo em string se for Date
                 const d = new Date(data);
                 let h = 0, m = 0;
 
@@ -195,7 +197,6 @@ export class ControleVeiculoService {
                     m = hora.getMinutes();
                 }
 
-                // Ajusta a data com a hora correta
                 d.setHours(h, m);
 
                 const day = String(d.getDate()).padStart(2, '0');
@@ -275,16 +276,26 @@ export class ControleVeiculoService {
         }
     }
 
-    public deletarControleVeiculo(id: number): Promise<ControleVeiculo | null> {
-        return this.controleVeiculo.deletarControleVeiculo(id);
+    public async deletarControleVeiculo(id: number): Promise<ControleVeiculo> {
+        const buscarControleVeiculo = await this.controleVeiculo.listarControlesVeiculosPorID(id);
+        if (!buscarControleVeiculo) throw new ErroAplicacao("Controle veículo não encontrado", 404);
+
+        return this.controleVeiculo.deletarControleVeiculo(buscarControleVeiculo.id);
     }
 
     public listarTodosControlesVeiculos(dataInicio?: string, dataFim?: string): Promise<ControleVeiculo[]> {
+        if ((dataInicio && !dataFim) || (!dataInicio && dataFim)) {
+            throw new ErroAplicacao("É necessário informar dataInicio e dataFim juntos.", 400);
+        }
+
         return this.controleVeiculo.listarTodosControlesVeiculos(dataInicio, dataFim);
     }
 
-    public listarControlesVeiculosPorID(id: number): Promise<ControleVeiculo | null> {
-        return this.controleVeiculo.listarControlesVeiculosPorID(id);
+    public async listarControlesVeiculosPorID(id: number): Promise<ControleVeiculo> {
+        const buscarControleVeiculoPorID = await this.controleVeiculo.listarControlesVeiculosPorID(id)
+        if (!buscarControleVeiculoPorID) throw new ErroAplicacao(`Controle veículo por ID ${id} não encontrado`, 404);
+
+        return buscarControleVeiculoPorID;
     }
 
     public contarSolicitacaoAberto(): Promise<number | null> {

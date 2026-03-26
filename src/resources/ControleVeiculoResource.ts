@@ -1,11 +1,11 @@
 import { IControleVeiculoRepository } from "../data/repositories/ControleVeiculoRepository";
 import { conexaoMSSQL } from "../db";
-import { ControleVeiculo, Veiculo } from "../domain";
+import { ControleVeiculo } from "../domain";
 import { IControleVeiculo } from "../interface/IControleVeiculo";
 import { INomeControleVeiculo } from "../interface/INomeControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
-import sql from 'mssql';
 import { VeiculoResource } from "./VeiculoResource";
+import sql from 'mssql';
 
 export class ControleVeiculoResource implements IControleVeiculoRepository {
     public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo | null> {
@@ -63,25 +63,13 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
     }
 
-    public async deletarControleVeiculo(id: number): Promise<ControleVeiculo | null> {
-        try {
-            const pool = await conexaoMSSQL();
-            const resultado = await pool.request()
-                .input("id", sql.Int, id)
-                .query(`
-                DELETE FROM cs_controleVeiculo
-                OUTPUT DELETED.*
-                WHERE id = @id
-            `);
+    public async deletarControleVeiculo(id: number): Promise<ControleVeiculo> {
+        const pool = await conexaoMSSQL();
 
-            if (!resultado.recordset || resultado.recordset.length === 0) {
-                return null;
-            }
-            return resultado.recordset[0];
-        } catch (error: any) {
-            console.error("Erro ao deletar controle de veiculo:", error);
-            return null;
-        }
+        const resultado = await pool.request().input("id", sql.Int, id)
+            .query(`DELETE FROM cs_controleVeiculo OUTPUT DELETED.* WHERE id = @id`);
+
+        return resultado.recordset?.[0];
     }
 
     public async listarNomesResponsaveis(id: number): Promise<INomeControleVeiculo | null> {
@@ -120,25 +108,21 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
     }
 
     public async listarTodosControlesVeiculos(dataInicio?: string, dataFim?: string): Promise<ControleVeiculo[]> {
-        try {
-            const pool = await conexaoMSSQL();
-            const request = pool.request();
+        const pool = await conexaoMSSQL();
+        const request = pool.request();
 
-            let filtroData = "";
+        let filtroData = "";
 
-            if (!dataInicio && !dataFim) {
-                filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) = CAST(GETDATE() AS DATE)";
-            } else if (dataInicio && dataFim) {
-                filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) BETWEEN @dataInicio AND @dataFim";
-                request.input("dataInicio", dataInicio);
-                request.input("dataFim", dataFim);
-            }
-            else {
-                throw new Error("É necessário informar dataInicio e dataFim juntos.");
-            }
+        if (!dataInicio && !dataFim) {
+            filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) = CAST(GETDATE() AS DATE)";
+        } else if (dataInicio && dataFim) {
+            filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) BETWEEN @dataInicio AND @dataFim";
+            request.input("dataInicio", dataInicio);
+            request.input("dataFim", dataFim);
+        }
 
-            const resultado = await request.query(
-                `SELECT 
+        const resultado = await request.query(
+            `SELECT 
                 cv.id,
                 ve.placa,
                 cv.destino,
@@ -169,28 +153,17 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                 END,
                 cv.data_solicitacao DESC,
                 cv.horario_saida DESC;`
-            )
-            return resultado.recordset as ControleVeiculo[];
-        } catch (error) {
-            console.error("Erro ao listar controles veiculos: ", error)
-            return []
-        }
+        )
+        return resultado.recordset as ControleVeiculo[];
     }
 
-    public async listarControlesVeiculosPorID(id: number): Promise<ControleVeiculo | null> {
-        try {
-            const pool = await conexaoMSSQL();
-            const resultado = await pool.request()
-                .input("id", sql.Int, id)
-                .query(`SELECT * FROM cs_controleVeiculo where id = @id`);
+    public async listarControlesVeiculosPorID(id: number): Promise<ControleVeiculo> {
+        const pool = await conexaoMSSQL();
 
-            if (resultado.recordset.length > 0) return resultado.recordset[0] as ControleVeiculo;
+        const resultado = await pool.request().input("id", sql.Int, id)
+            .query(`SELECT * FROM cs_controleVeiculo where id = @id`);
 
-            return null;
-        } catch (error) {
-            console.error("Erro ao listar controle de veiculo");
-            return null;
-        }
+        return resultado.recordset[0];
     }
 
     public async editarSolicitacao(id: number, dados: IControleVeiculo, idVeiculo: number): Promise<ControleVeiculo | null> {
@@ -338,18 +311,26 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
     }
 
-    public async contarSolicitacoesVeiculosEmAberto(): Promise<number | null> {
-        try {
-            const pool = await conexaoMSSQL();
-            const resultado = await pool.request().query(`
-            SELECT COUNT(*) AS total FROM cs_controleVeiculo WHERE data_chegada IS NULL and horario_chegada IS NULL;`);
-            const total = resultado.recordset[0]?.total ?? 0;
+    public async contarSolicitacoesVeiculosEmAberto(): Promise<number> {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request().query(`SELECT COUNT(*) AS total FROM cs_controleVeiculo WHERE data_chegada IS NULL and horario_chegada IS NULL;`);
 
-            return total;
-        } catch (error) {
-            console.error("Erro ao contar pontos abertos:", error);
-            return null;
-        }
+        return resultado.recordset[0]?.total ?? 0;
+    }
+
+    public async verificaSolicitacaoParaVeiculoAberto(idVeiculo: number): Promise<boolean> {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request()
+            .input('IdVeiculo', idVeiculo)
+            .query(`
+                SELECT COUNT(*) AS aberto
+                FROM cs_controleVeiculo
+                WHERE idVeiculo = @IdVeiculo
+                AND data_chegada IS NULL
+                AND horario_chegada IS NULL;
+            `);
+
+        return (resultado.recordset[0]?.aberto ?? 0) > 0;
     }
 
     public async listarPessoal(termo?: string): Promise<IUsuario[] | null> {

@@ -38,20 +38,4 @@ export class ControleAcesso {
         this.placaVeiculo = properties.placaVeiculo;
         this.numeroCartao = properties.numeroCartao;
     }
-
-    get Object(): ControleAcessoObject {
-        return {
-            id: this.id,
-            idVisitante: this.idVisitante,
-            idPorteiroEntrada: this.idPorteiroEntrada,
-            idPorteiroSaida: this.idPorteiroSaida,
-            dataEntrada: this.dataEntrada,
-            horaEntrada: this.horaEntrada,
-            dataSaida: this.dataSaida,
-            horaSaida: this.horaSaida,
-            objetivo: this.objetivo,
-            placaVeiculo: this.placaVeiculo,
-            numeroCartao: this.numeroCartao
-        }
-    }
 }

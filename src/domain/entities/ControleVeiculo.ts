@@ -1,6 +1,7 @@
 export interface ControleVeiculoObject {
     id: number;
     idVeiculo: number;
+    estado: string;
     dataSolicitacao: Date;
     horarioSaida: string;
     kmInicialVeiculo: number;
@@ -28,6 +29,7 @@ export class ControleVeiculo {
     localizacao: string;
     idPorteiroEntrada: number;
     chapaResponsavelAutorizacao: string;
+    estado: string;
 
     constructor(properties: ControleVeiculoObject) {
         this.id = properties.id;
@@ -43,23 +45,6 @@ export class ControleVeiculo {
         this.localizacao = properties.localizacao;
         this.idPorteiroEntrada = properties.idPorteiroEntrada;
         this.chapaResponsavelAutorizacao = properties.chapaResponsavelAutorizacao;
-    }
-
-    get Object(): ControleVeiculoObject {
-        return {
-            id: this.id,
-            idVeiculo: this.idVeiculo,
-            dataSolicitacao: this.dataSolicitacao,
-            horarioSaida: this.horarioSaida,
-            kmInicialVeiculo: this.kmInicialVeiculo,
-            dataChegada: this.dataChegada,
-            horarioChegada: this.horarioChegada,
-            kmFinalVeiculo: this.kmFinalVeiculo,
-            idPorteiroSaida: this.idPorteiroSaida,
-            chapaResponsavel: this.chapaResponsavel,
-            localizacao: this.localizacao,
-            idPorteiroEntrada: this.idPorteiroEntrada,
-            chapaResponsavelAutorizacao: this.chapaResponsavelAutorizacao,
-        };
+        this.estado = properties.estado;
     }
 }
