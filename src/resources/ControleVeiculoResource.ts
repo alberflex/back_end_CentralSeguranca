@@ -116,7 +116,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         if (!dataInicio && !dataFim) {
             filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) = CAST(GETDATE() AS DATE)";
         } else if (dataInicio && dataFim) {
-            filtroData = "WHERE CAST(cv.data_solicitacao AS DATE) BETWEEN @dataInicio AND @dataFim";
+            filtroData = `WHERE (CAST(cv.data_solicitacao AS DATE) BETWEEN @dataInicio AND @dataFim) OR cv.data_chegada IS NULL`;
             request.input("dataInicio", dataInicio);
             request.input("dataFim", dataFim);
         }
