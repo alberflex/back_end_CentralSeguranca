@@ -13,6 +13,8 @@ export interface ControleVeiculoObject {
     localizacao: string;
     idPorteiroEntrada: number;
     chapaResponsavelAutorizacao: string;
+    condicaoSaida: string;
+    condicaoEntrada: string;
 }
 
 export class ControleVeiculo {
@@ -30,7 +32,9 @@ export class ControleVeiculo {
     idPorteiroEntrada: number;
     chapaResponsavelAutorizacao: string;
     estado: string;
-
+    condicaoSaida: string;
+    condicaoEntrada: string;
+    
     constructor(properties: ControleVeiculoObject) {
         this.id = properties.id;
         this.idVeiculo = properties.idVeiculo;
@@ -46,5 +50,7 @@ export class ControleVeiculo {
         this.idPorteiroEntrada = properties.idPorteiroEntrada;
         this.chapaResponsavelAutorizacao = properties.chapaResponsavelAutorizacao;
         this.estado = properties.estado;
+        this.condicaoEntrada = properties.condicaoEntrada;
+        this.condicaoSaida = properties.condicaoSaida;
     }
 }

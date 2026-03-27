@@ -8,6 +8,8 @@ export interface IControleVeiculo {
     localizacao: string;
     idPorteiroEntrada: number;
     idResponsavelAutorizacao: string;
+    condicaoEntrada: string;
+    condicaoSaida: string;
 }
 
 export interface IFechamentoControleVeiculo {

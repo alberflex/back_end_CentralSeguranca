@@ -22,6 +22,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
             .input("idResponsavel", sql.VarChar, cadastro.idResponsavel)
             .input("localizacao", sql.VarChar, cadastro.localizacao)
             .input("idResponsavelAutorizacao", sql.VarChar, cadastro.idResponsavelAutorizacao)
+            .input("condicao_saida", sql.VarChar, cadastro.condicaoSaida)
             .query(`INSERT INTO cs_controleVeiculo 
                         (   idVeiculo,
                             destino,
@@ -31,7 +32,8 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                             idPorteiroSaida,
                             idResponsavel,
                             localizacao,
-                            idResponsavelAutorizacao
+                            idResponsavelAutorizacao,
+                            condicao_saida
                         )
                         OUTPUT INSERTED.*
                         VALUES 
@@ -44,7 +46,8 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                             @idPorteiroSaida,
                             @idResponsavel,
                             @localizacao,
-                            @idResponsavelAutorizacao
+                            @idResponsavelAutorizacao,
+                            @condicao_saida
                         )
                     `);
         return resultado.recordset[0] as ControleVeiculo;
@@ -113,7 +116,9 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                 pe.nome AS nome_responsavel,
                 cv.localizacao,
                 po.nome AS nome_porteiro_entrada,
-                pe.nome AS nome_responsavel_autorizacao
+                pe.nome AS nome_responsavel_autorizacao,
+                cv.condicao_saida,
+                cv.condicao_entrada
             FROM cs_controleVeiculo cv
             INNER JOIN cs_veiculo ve 
                 ON cv.idVeiculo = ve.id
@@ -158,7 +163,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
             .input("horario_chegada", sql.VarChar, horaAtualBrasiliaString())
             .input("km_final_veiculo", sql.Numeric, dados.km_final_veiculo)
             .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
-
+            .input("condicao_entrada", sql.VarChar, dados.condicaoEntrada)
             .query(`    UPDATE cs_controleVeiculo 
                         SET 
                             destino = @destino, 
@@ -169,7 +174,8 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                             data_chegada = @data_chegada,
                             horario_chegada = @horario_chegada,
                             km_final_veiculo = @km_final_veiculo,
-                            idPorteiroEntrada = @idPorteiroEntrada
+                            idPorteiroEntrada = @idPorteiroEntrada,
+                            condicao_entrada = @condicao_entrada
                         OUTPUT 
                             INSERTED.id AS id,
                             INSERTED.idVeiculo AS idVeiculo,
@@ -184,7 +190,8 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                             INSERTED.idResponsavel AS idResponsavel,
                             INSERTED.localizacao AS localizacao,
                             INSERTED.idPorteiroEntrada AS idPorteiroEntrada,
-                            INSERTED.idResponsavelAutorizacao AS idResponsavelAutorizacao
+                            INSERTED.idResponsavelAutorizacao AS idResponsavelAutorizacao,
+                            INSERTED.condicao_entrada AS condicao_entrada
                         WHERE id = @id`);
 
         if (!await veiculo.alteraKilometragem(idVeiculo, dados.km_final_veiculo)) return null;
