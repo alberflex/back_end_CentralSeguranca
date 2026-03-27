@@ -37,7 +37,7 @@ export class PorteiroService {
 
         if (!senhaValida) return null;
         const token = jwt.sign(
-            { id: usuario.id, cpf: usuario.cpf, papel: usuario.papel, }, process.env.JWT_SECRET || "default",
+            { id: usuario.id, cpf: usuario.cpf, papel: usuario.papel, nome: usuario.nome }, process.env.JWT_SECRET || "default",
             { expiresIn: "1h" }
         );
         return token;

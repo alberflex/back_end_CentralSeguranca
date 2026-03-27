@@ -14,12 +14,4 @@ export class UsuarioPonto {
         this.cpf = properties.cpf;
         this.chapa = properties.chapa;
     }
-
-    get Object(): UsuarioPontoObject {
-        return {
-            nome: this.nome,
-            cpf: this.cpf,
-            chapa: this.chapa,
-        };
-    }
 }

@@ -1,18 +1,26 @@
 import { ControleVeiculo } from "../domain";
+import { EAcao } from "../enums/EAcao";
+import { ETelas } from "../enums/ETelas";
+import { BaseService } from "../helpers/BaseService";
 import { IControleVeiculo } from "../interface/IControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
 import { ControleVeiculoResource } from "../resources/ControleVeiculoResource";
 import { VeiculoResource } from "../resources/VeiculoResource";
 import { EmailService } from "../utils/Email";
 import { ErroAplicacao } from "../utils/Erros";
+import { LogService } from "./Log";
 
-export class ControleVeiculoService {
+export class ControleVeiculoService extends BaseService {
     private controleVeiculo: ControleVeiculoResource;
     private veiculoResource: VeiculoResource;
+    private logService: LogService;
 
     constructor() {
+        super();
+
         this.controleVeiculo = new ControleVeiculoResource();
         this.veiculoResource = new VeiculoResource();
+        this.logService = new LogService();
     }
 
     public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo> {
@@ -27,6 +35,13 @@ export class ControleVeiculoService {
 
             const controleCadastrado = await this.controleVeiculo.cadastrarControleVeiculo(cadastro);
             if (!controleCadastrado) throw new ErroAplicacao("Falha ao cadastrar controle do veículo", 500);
+
+            this.logService.cadastrarLog({
+                tela: ETelas.CONTROLE_VEICULO,
+                acao: EAcao.CADASTRO,
+                idUsuario: this.user.id,
+                nomeUsuario: this.user.nome
+            });
 
             const listarControleCadastrado = await this.controleVeiculo.listarControlesVeiculosPorID(controleCadastrado.id);
             if (!listarControleCadastrado) throw new ErroAplicacao("Falha ao obter controle cadastrado", 500);
@@ -125,7 +140,7 @@ export class ControleVeiculoService {
                         <p><strong>Portaria:</strong> ${nomesResponsaveis.nome_porteiro_saida}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
-                        <p><strong>Destino:</strong> ${cadastro.destino}</p>
+                        <p><strong>Destino:</strong> ${cadastro.localizacao} - ${cadastro.destino}</p>
                         <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
                         <p><strong>Data:</strong> ${dataAtual}</p>
                         <div class="btn-container">
@@ -175,6 +190,13 @@ export class ControleVeiculoService {
             if (!controleEditado) {
                 throw new Error("Erro ao processar a edição");
             }
+
+            this.logService.cadastrarLog({
+                tela: ETelas.CONTROLE_VEICULO,
+                acao: EAcao.EDICAO,
+                idUsuario: this.user.id,
+                nomeUsuario: this.user.nome
+            });
 
             const listarControle = await this.controleVeiculo.listarControlesVeiculosPorID(controleEditado.id);
             if (!listarControle) {
@@ -239,7 +261,7 @@ export class ControleVeiculoService {
                         <p><strong>Porteiro entrada:</strong> ${nomesResponsaveis.nome_porteiro_entrada}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
-                        <p><strong>Destino:</strong> ${dados.destino}</p>
+                        <p><strong>Destino:</strong>${dados.localizacao} - ${dados.destino}</p>
                         <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
                         <p><strong>Km Final:</strong> ${dados.km_final_veiculo}</p>
                         <p><strong>Data saída:</strong> ${formatarDataHora(controleEditado.dataSolicitacao, controleEditado.horarioSaida)}</p>
@@ -280,6 +302,13 @@ export class ControleVeiculoService {
         const buscarControleVeiculo = await this.controleVeiculo.listarControlesVeiculosPorID(id);
         if (!buscarControleVeiculo) throw new ErroAplicacao("Controle veículo não encontrado", 404);
 
+        this.logService.cadastrarLog({
+            tela: ETelas.CONTROLE_VEICULO,
+            acao: EAcao.EXCLUSAO,
+            idUsuario: this.user.id,
+            nomeUsuario: this.user.nome
+        });
+
         return this.controleVeiculo.deletarControleVeiculo(buscarControleVeiculo.id);
     }
 
@@ -288,6 +317,13 @@ export class ControleVeiculoService {
             throw new ErroAplicacao("É necessário informar dataInicio e dataFim juntos.", 400);
         }
 
+        this.logService.cadastrarLog({
+            tela: ETelas.CONTROLE_VEICULO,
+            acao: EAcao.LISTAGEM,
+            idUsuario: this.user.id,
+            nomeUsuario: this.user.nome
+        });
+
         return this.controleVeiculo.listarTodosControlesVeiculos(dataInicio, dataFim);
     }
 
@@ -295,10 +331,17 @@ export class ControleVeiculoService {
         const buscarControleVeiculoPorID = await this.controleVeiculo.listarControlesVeiculosPorID(id)
         if (!buscarControleVeiculoPorID) throw new ErroAplicacao(`Controle veículo por ID ${id} não encontrado`, 404);
 
+        this.logService.cadastrarLog({
+            tela: ETelas.CONTROLE_VEICULO,
+            acao: EAcao.LISTAGEMPORID,
+            idUsuario: this.user.id,
+            nomeUsuario: this.user.nome
+        });
+
         return buscarControleVeiculoPorID;
     }
 
-    public contarSolicitacaoAberto(): Promise<number | null> {
+    public contarSolicitacaoAberto(): Promise<number> {
         return this.controleVeiculo.contarSolicitacoesVeiculosEmAberto();
     }
 

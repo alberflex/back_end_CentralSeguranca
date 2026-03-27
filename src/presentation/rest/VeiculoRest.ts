@@ -3,13 +3,15 @@ import { VeiculoService } from "../../services/VeiculoService";
 import { armazenamentoRedeMulter } from "../../utils/ArmazenamentoRede";
 import { ErroAplicacao } from "../../utils/Erros";
 import multer from "multer";
+import { autenticarJWT } from "../../middleware/JWT";
+import { contextoMiddleware } from "../../middleware/contexto";
 
 const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VEICULOS");
 const upload = multer({ storage: storage });
 const rotasVeiculo = Router();
 const veiculoService = new VeiculoService();
 
-rotasVeiculo.post("/cadastroVeiculo", async (req, res) => {
+rotasVeiculo.post("/cadastroVeiculo", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         return res.status(201).json(await veiculoService.cadastrarVeiculo(req.body));
     } catch (err) {
@@ -19,6 +21,7 @@ rotasVeiculo.post("/cadastroVeiculo", async (req, res) => {
 
 rotasVeiculo.put("/editarVeiculo/:id",
     upload.fields([{ name: "caminho_imagem_veiculo" }]),
+    autenticarJWT, contextoMiddleware,
     async (req, res) => {
         try {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -38,7 +41,7 @@ rotasVeiculo.put("/editarVeiculo/:id",
     }
 );
 
-rotasVeiculo.delete("/deletarVeiculo/:id", async (req, res) => {
+rotasVeiculo.delete("/deletarVeiculo/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         res.status(200).json(await veiculoService.deletarVeiculo(parseInt(req.params.id, 10)));
     } catch (err) {
@@ -46,7 +49,7 @@ rotasVeiculo.delete("/deletarVeiculo/:id", async (req, res) => {
     }
 });
 
-rotasVeiculo.get("/listarTodosVeiculos", async (req, res) => {
+rotasVeiculo.get("/listarTodosVeiculos", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         const { placa } = req.query;
 
@@ -56,7 +59,7 @@ rotasVeiculo.get("/listarTodosVeiculos", async (req, res) => {
     }
 });
 
-rotasVeiculo.get("/listarVeiculoPorId/:id", async (req, res) => {
+rotasVeiculo.get("/listarVeiculoPorId/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         return res.status(200).json(await veiculoService.listarVeiculoPorId(parseInt(req.params.id, 10)));
     } catch (err) {

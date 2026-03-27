@@ -20,14 +20,4 @@ export class Visitante {
         this.empresa = properties.empresa;
         this.caminho_foto_visitante = properties.caminho_foto_visitante;
     }
-
-    get Object(): VisitanteObject {
-        return {
-            id: this.id,
-            nome: this.nome,
-            cpf: this.cpf,
-            empresa: this.empresa,
-            caminho_foto_visitante: this.caminho_foto_visitante
-        };
-    }
 }

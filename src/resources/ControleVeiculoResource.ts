@@ -4,34 +4,25 @@ import { ControleVeiculo } from "../domain";
 import { IControleVeiculo } from "../interface/IControleVeiculo";
 import { INomeControleVeiculo } from "../interface/INomeControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
+import { dataAtualString } from "../utils/Data";
+import { horaAtualBrasiliaString } from "../utils/Horario";
 import { VeiculoResource } from "./VeiculoResource";
 import sql from 'mssql';
 
 export class ControleVeiculoResource implements IControleVeiculoRepository {
-    public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo | null> {
-        try {
-            const pool = await conexaoMSSQL();
-            const dataAtual = new Date();
-            const data = dataAtual.toISOString().split("T")[0];
-            function horaAtualBrasilia(): string {
-                const agora = new Date();
-                const horaBrasilia = agora.toLocaleTimeString('pt-BR', {
-                    timeZone: 'America/Sao_Paulo',
-                    hour12: false
-                });
-                return horaBrasilia;
-            }
-            const resultado = await pool.request()
-                .input("idVeiculo", sql.Numeric, cadastro.idVeiculo)
-                .input("destino", sql.VarChar, cadastro.destino)
-                .input("data_solicitacao", sql.Date, data)
-                .input("horario_saida", sql.VarChar, horaAtualBrasilia())
-                .input("km_inicial_veiculo", sql.Numeric, cadastro.km_inicial_veiculo)
-                .input("idPorteiroSaida", sql.Int, cadastro.idPorteiroSaida)
-                .input("idResponsavel", sql.VarChar, cadastro.idResponsavel)
-                .input("localizacao", sql.VarChar, cadastro.localizacao)
-                .input("idResponsavelAutorizacao", sql.VarChar, cadastro.idResponsavelAutorizacao)
-                .query(`INSERT INTO cs_controleVeiculo 
+    public async cadastrarControleVeiculo(cadastro: IControleVeiculo): Promise<ControleVeiculo> {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request()
+            .input("idVeiculo", sql.Numeric, cadastro.idVeiculo)
+            .input("destino", sql.VarChar, cadastro.destino)
+            .input("data_solicitacao", sql.Date, dataAtualString())
+            .input("horario_saida", sql.VarChar, horaAtualBrasiliaString())
+            .input("km_inicial_veiculo", sql.Numeric, cadastro.km_inicial_veiculo)
+            .input("idPorteiroSaida", sql.Int, cadastro.idPorteiroSaida)
+            .input("idResponsavel", sql.VarChar, cadastro.idResponsavel)
+            .input("localizacao", sql.VarChar, cadastro.localizacao)
+            .input("idResponsavelAutorizacao", sql.VarChar, cadastro.idResponsavelAutorizacao)
+            .query(`INSERT INTO cs_controleVeiculo 
                         (   idVeiculo,
                             destino,
                             data_solicitacao,
@@ -56,11 +47,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                             @idResponsavelAutorizacao
                         )
                     `);
-            return resultado.recordset[0] as ControleVeiculo || null;
-        } catch (error) {
-            console.error("Erro ao cadastrar controle de ponto:", error);
-            return null;
-        }
+        return resultado.recordset[0] as ControleVeiculo;
     }
 
     public async deletarControleVeiculo(id: number): Promise<ControleVeiculo> {
@@ -72,13 +59,12 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         return resultado.recordset?.[0];
     }
 
-    public async listarNomesResponsaveis(id: number): Promise<INomeControleVeiculo | null> {
-        try {
-            const pool = await conexaoMSSQL();
+    public async listarNomesResponsaveis(id: number): Promise<INomeControleVeiculo> {
+        const pool = await conexaoMSSQL();
 
-            const resultado = await pool.request()
-                .input("id", sql.Int, Number(id))
-                .query(`
+        const resultado = await pool.request()
+            .input("id", sql.Int, Number(id))
+            .query(`
                     SELECT 
                         pe.nome AS nome_responsavel,
                         pe2.nome AS nome_responsavel_autorizacao,
@@ -95,16 +81,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                         ON poEntrada.id = cv.idPorteiroEntrada
                     WHERE cv.id =  @id
             `);
-
-            if (resultado.recordset.length === 0) {
-                return null;
-            }
-            console.log(resultado.recordset[0])
-            return resultado.recordset[0] as INomeControleVeiculo;
-        } catch (error: any) {
-            console.error("Erro ao listar nomes do controle de veículo:", error);
-            return null;
-        }
+        return resultado.recordset?.[0] as INomeControleVeiculo;
     }
 
     public async listarTodosControlesVeiculos(dataInicio?: string, dataFim?: string): Promise<ControleVeiculo[]> {
@@ -169,31 +146,20 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
     public async editarSolicitacao(id: number, dados: IControleVeiculo, idVeiculo: number): Promise<ControleVeiculo | null> {
         const veiculo = new VeiculoResource();
 
-        try {
-            const dataAtual = new Date();
-            const data = dataAtual.toISOString().split("T")[0];
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request()
+            .input("id", sql.Int, id)
+            .input("destino", sql.VarChar, dados.destino)
+            .input("idPorteiroSaida", sql.Int, dados.idPorteiroSaida)
+            .input("idResponsavel", sql.VarChar, dados.idResponsavel)
+            .input("localizacao", sql.VarChar, dados.localizacao)
+            .input("idResponsavelAutorizacao", sql.VarChar, dados.idResponsavelAutorizacao)
+            .input("data_chegada", sql.Date, dataAtualString())
+            .input("horario_chegada", sql.VarChar, horaAtualBrasiliaString())
+            .input("km_final_veiculo", sql.Numeric, dados.km_final_veiculo)
+            .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
 
-            function horaAtualBrasilia(): string {
-                const agora = new Date();
-                const horaBrasilia = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false });
-                return horaBrasilia;
-            }
-
-            const pool = await conexaoMSSQL();
-            const resultado = await pool.request()
-                .input("id", sql.Int, id)
-                .input("destino", sql.VarChar, dados.destino)
-                .input("idPorteiroSaida", sql.Int, dados.idPorteiroSaida)
-                .input("idResponsavel", sql.VarChar, dados.idResponsavel)
-                .input("localizacao", sql.VarChar, dados.localizacao)
-                .input("idResponsavelAutorizacao", sql.VarChar, dados.idResponsavelAutorizacao)
-                .input("data_chegada", sql.Date, data)
-                .input("horario_chegada", sql.VarChar, horaAtualBrasilia())
-                .input("km_final_veiculo", sql.Numeric, dados.km_final_veiculo)
-                .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
-
-                .query(`
-                        UPDATE cs_controleVeiculo 
+            .query(`    UPDATE cs_controleVeiculo 
                         SET 
                             destino = @destino, 
                             idPorteiroSaida = @idPorteiroSaida,
@@ -221,14 +187,10 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                             INSERTED.idResponsavelAutorizacao AS idResponsavelAutorizacao
                         WHERE id = @id`);
 
-            if (!await veiculo.alteraKilometragem(idVeiculo, dados.km_final_veiculo)) return null;
-            if (!resultado.recordset[0]) return null;
+        if (!await veiculo.alteraKilometragem(idVeiculo, dados.km_final_veiculo)) return null;
+        if (!resultado.recordset[0]) return null;
 
-            return resultado.recordset[0];
-        } catch (error) {
-            console.error(error);
-            return null;
-        }
+        return resultado.recordset[0];
     }
 
     public async verificaSolicitacaoAberta(id: number): Promise<ControleVeiculo | null> {
@@ -268,29 +230,15 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
     }
 
-    public async fecharSolicitacao(id: number, idPorteiroEntrada: number, kmFinal: number): Promise<ControleVeiculo | null> {
-        try {
-            const dataAtual = new Date();
-            const data = dataAtual.toISOString().split("T")[0];
-
-            function horaAtualBrasilia(): string {
-                const agora = new Date();
-                const horaBrasilia = agora.toLocaleTimeString('pt-BR', {
-                    timeZone: 'America/Sao_Paulo',
-                    hour12: false
-                });
-                return horaBrasilia;
-            }
-
-            const pool = await conexaoMSSQL();
-
-            const resultado = await pool.request()
-                .input("id", sql.Int, id)
-                .input("horario_chegada", sql.VarChar, horaAtualBrasilia())
-                .input("data_chegada", sql.Date, data)
-                .input("km_final_veiculo", sql.Numeric, kmFinal)
-                .input("idPorteiroEntrada", sql.Int, idPorteiroEntrada)
-                .query(`
+    public async fecharSolicitacao(id: number, idPorteiroEntrada: number, kmFinal: number): Promise<ControleVeiculo> {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request()
+            .input("id", sql.Int, id)
+            .input("horario_chegada", sql.VarChar, horaAtualBrasiliaString())
+            .input("data_chegada", sql.Date, dataAtualString())
+            .input("km_final_veiculo", sql.Numeric, kmFinal)
+            .input("idPorteiroEntrada", sql.Int, idPorteiroEntrada)
+            .query(`
                 UPDATE cs_controleVeiculo
                 SET horario_chegada = @horario_chegada, 
                     data_chegada = @data_chegada, 
@@ -300,15 +248,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                 WHERE id = @id
             `);
 
-            if (!resultado.recordset[0]) {
-                console.log("Nenhum registro foi alterado.");
-                return null;
-            }
-            return resultado.recordset[0];
-        } catch (error) {
-            console.error("Erro ao fechar controle de veiculo:", error);
-            return null;
-        }
+        return resultado.recordset[0] as ControleVeiculo;
     }
 
     public async contarSolicitacoesVeiculosEmAberto(): Promise<number> {
@@ -333,25 +273,19 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         return (resultado.recordset[0]?.aberto ?? 0) > 0;
     }
 
-    public async listarPessoal(termo?: string): Promise<IUsuario[] | null> {
-        try {
-            const pool = await conexaoMSSQL();
+    public async listarPessoal(termo?: string): Promise<IUsuario[]> {
+        const pool = await conexaoMSSQL();
 
-            let query = `SELECT * FROM alb_pessoal`;
+        let query = `SELECT * FROM alb_pessoal`;
 
-            if (termo && termo.trim() !== "") {
-                query += ` WHERE nome LIKE '%' + @termo + '%'`;
-            }
-
-            const resultado = await pool.request()
-                .input("termo", termo ?? "")
-                .query(query);
-
-            return resultado.recordset as IUsuario[];
-
-        } catch (error) {
-            console.error("Erro ao listar usuarios:", error);
-            return null;
+        if (termo && termo.trim() !== "") {
+            query += ` WHERE nome LIKE '%' + @termo + '%'`;
         }
+
+        const resultado = await pool.request()
+            .input("termo", termo ?? "")
+            .query(query);
+
+        return resultado.recordset as IUsuario[];
     }
 }

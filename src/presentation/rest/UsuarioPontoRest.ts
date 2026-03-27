@@ -1,21 +1,17 @@
 import { Router } from "express";
 import { UsuarioPontoService } from "../../services/UsuarioPonto";
 import { autenticarJWT } from "../../middleware/JWT";
+import { ErroAplicacao } from "../../utils/Erros";
+import { contextoMiddleware } from "../../middleware/contexto";
 
 const rotasUsuarioPonto = Router();
 const porteiroService = new UsuarioPontoService();
 
-rotasUsuarioPonto.get("/listarTodosUsuariosPontos", autenticarJWT, async (req, res) => {
+rotasUsuarioPonto.get("/listarTodosUsuariosPontos", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const usuarioPonto = await porteiroService.listarTodosUsuariosPonto();
-        if (usuarioPonto) {
-            res.status(200).json(usuarioPonto);
-        } else {
-            res.status(404).json({ erro: "Nenhum usuario ponto cadastrado" });
-        }
+        return res.status(200).json(await porteiroService.listarTodosUsuariosPonto());
     } catch (err) {
-        console.error("Erro ao obter usuarioPonto:", err);
-        res.status(500).json({ erro: "Erro ao usuarioPonto" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 

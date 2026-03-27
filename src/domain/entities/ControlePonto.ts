@@ -23,15 +23,4 @@ export class ControlePonto {
         this.idPorteiro = properties.idPorteiro;
         this.chapa = properties.chapa;
     }
-
-    get Object(): ControlePontoObject {
-        return {
-            id: this.id,
-            data: this.data,
-            horaEntrada: this.horaEntrada,
-            horaSaida: this.horaSaida,
-            idPorteiro: this.idPorteiro,
-            chapa: this.chapa,
-        };
-    }
 }

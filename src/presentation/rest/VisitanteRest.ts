@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { VisitanteService } from "../../services/VisitanteService";
 import { armazenamentoRedeMulter } from "../../utils/ArmazenamentoRede";
+import { autenticarJWT } from "../../middleware/JWT";
+import { ErroAplicacao } from "../../utils/Erros";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { contextoMiddleware } from "../../middleware/contexto";
 
 const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VISITANTES\\IMAGENS\\");
 const upload = multer({ storage: storage });
@@ -15,6 +18,7 @@ rotasVisitante.post(
     upload.fields([
         { name: "caminho_foto_visitante", maxCount: 1 },
     ]),
+    autenticarJWT, contextoMiddleware,
     async (req, res) => {
         try {
             const acesso = req.body;
@@ -25,24 +29,20 @@ rotasVisitante.post(
             if (!files?.caminho_foto_visitante) {
                 return res.status(400).json({ erro: "Foto do visitante não enviada" });
             }
-
             acesso.caminho_foto_visitante = files.caminho_foto_visitante[0].path;
 
-            const novoVisitante = await visitanteService.cadastrarVisitante(acesso);
-
-            res.status(201).json(novoVisitante);
+            return res.status(201).json(await visitanteService.cadastrarVisitante(acesso));
         } catch (err) {
-            console.error("Erro ao cadastrar:", err);
-            res.status(500).json({ erro: "Erro ao cadastrar visitante" });
+            if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
         }
     }
 );
-
 
 rotasVisitante.put("/editarVisitante/:id",
     upload.fields([
         { name: "caminho_foto_visitante", maxCount: 1 }
     ]),
+    autenticarJWT, contextoMiddleware,
     async (req, res) => {
         try {
             const acesso = req.body;
@@ -51,41 +51,29 @@ rotasVisitante.put("/editarVisitante/:id",
 
             acesso.caminhoImagemVisitante = files["caminho_foto_visitante"][0].path;
 
-            const visitanteEditado = await visitanteService.editarVisitante(acesso, parseInt(req.params.id, 10));
-            res.status(201).json(visitanteEditado);
+            return res.status(201).json(await visitanteService.editarVisitante(acesso, parseInt(req.params.id, 10)));
         } catch (err) {
-            console.error("Erro ao cadastrar:", err);
-            res.status(500).json({ erro: "Erro ao editar visitante" });
+            if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
         }
     });
 
-rotasVisitante.delete("/deletarVisitante/:id", async (req, res) => {
+rotasVisitante.delete("/deletarVisitante/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const deletado = await visitanteService.deletarVisitante(parseInt(req.params.id, 10))
-        if (deletado) return res.status(200).json(deletado);
-
-        return res.status(400).json('Visitante não encontrado');
+        return res.status(200).json(await visitanteService.deletarVisitante(parseInt(req.params.id, 10)));
     } catch (err) {
-        console.error("Erro ao deletar:", err);
-        res.status(404).json({ erro: "Visitante não encontrado" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
-rotasVisitante.get("/listarTodosVisitantes", async (req, res) => {
+rotasVisitante.get("/listarTodosVisitantes", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const visitante = await visitanteService.listarTodosVisitantes();
-        if (visitante) {
-            res.status(200).json(visitante);
-        } else {
-            res.status(404).json({ erro: "Nenhum visitante cadastrado" });
-        }
+        return res.status(200).json(await visitanteService.listarTodosVisitantes());
     } catch (err) {
-        console.error("Erro ao obter visitante:", err);
-        res.status(500).json({ erro: "Erro ao obter visitante" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
-rotasVisitante.get("/listarVisitantePorId/:id", async (req, res) => {
+rotasVisitante.get("/listarVisitantePorId/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         const visitante = await visitanteService.listarVisitantePorId(parseInt(req.params.id, 10));
         if (!visitante) return res.status(200).json([]);
@@ -100,17 +88,13 @@ rotasVisitante.get("/listarVisitantePorId/:id", async (req, res) => {
                 console.error("Erro ao ler foto do visitante:", visitante.caminho_foto_visitante, err);
             }
         }
-
-        
         return res.status(200).json(visitante);
-
     } catch (err) {
-        console.error("Erro ao obter Visitante:", err);
-        res.status(500).json({ erro: "Erro ao obter Visitante" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
-rotasVisitante.get("/selecionaPorCPF/:CPF", async (req, res) => {
+rotasVisitante.get("/selecionaPorCPF/:CPF", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         const visitante = await visitanteService.selecionaPorCPF(req.params.CPF);
 
@@ -129,8 +113,7 @@ rotasVisitante.get("/selecionaPorCPF/:CPF", async (req, res) => {
 
         return res.status(200).json(visitante);
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ erro: "Erro ao obter visitante" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 

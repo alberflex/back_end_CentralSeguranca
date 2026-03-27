@@ -1,0 +1,7 @@
+export enum EAcao {
+    LISTAGEM = "LISTAGEM",
+    CADASTRO = "CADASTRO",
+    EDICAO = "EDICAO",
+    EXCLUSAO = "EXCLUSAO",
+    LISTAGEMPORID = "LISTAGEMPORID",
+}

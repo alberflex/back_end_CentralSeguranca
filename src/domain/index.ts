@@ -4,3 +4,4 @@ export * from "./entities/ControleAcesso";
 export * from "./entities/Veiculo";
 export * from "./entities/Visitante";
 export * from "./entities/Porteiro";
+export * from "./entities/Log"

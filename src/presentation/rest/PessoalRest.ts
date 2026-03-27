@@ -1,18 +1,17 @@
 import { Router } from "express";
 import { PessoalService } from "../../services/PessoalService";
+import { autenticarJWT } from "../../middleware/JWT";
+import { ErroAplicacao } from "../../utils/Erros";
+import { contextoMiddleware } from "../../middleware/contexto";
 
 const rotasPessoal = Router();
 const pessoalService = new PessoalService();
 
-rotasPessoal.get("/listarPessoal", async (req, res) => {
+rotasPessoal.get("/listarPessoal", autenticarJWT, contextoMiddleware,  async (req, res) => {
     try {
-        const nome = req.query.nome as string | undefined; 
-        const porteiro = await pessoalService.listarPessoal(nome);
-
-        res.status(200).json(porteiro);
+        return res.status(200).json(await pessoalService.listarPessoal(req.query.nome as string));
     } catch (err) {
-        console.error("Erro ao obter pessoal:", err);
-        res.status(500).json({ erro: "Erro ao obter pessoal" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 

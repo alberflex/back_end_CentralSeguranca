@@ -23,15 +23,4 @@ export class Porteiro {
         this.senha = properties.senha;
         this.papel = properties.papel;
     }
-
-    get Object(): PorteiroObject {
-        return {
-            id: this.id,
-            nome: this.nome,
-            chapa: this.chapa,
-            cpf: this.cpf,
-            senha: this.senha,
-            papel: this.papel
-        };
-    }
 }

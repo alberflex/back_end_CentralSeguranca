@@ -1,88 +1,59 @@
 import { Router } from "express";
 import { PorteiroService } from "../../services/PorteiroService";
 import { autenticarJWT } from "../../middleware/JWT";
+import { ErroAplicacao } from "../../utils/Erros";
+import { contextoMiddleware } from "../../middleware/contexto";
 
 const rotasPorteiro = Router();
 const porteiroService = new PorteiroService();
 
-rotasPorteiro.post("/cadastroPorteiro", async (req, res) => {
-    const novoPorteiro = req.body;
+rotasPorteiro.post("/cadastroPorteiro", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const cadastrado = await porteiroService.cadastrarPorteiro(novoPorteiro);
-        if (cadastrado) return res.status(201).json(cadastrado);
-        return res.status(400).json('Erro ao cadastrar porteiro');
+        return res.status(201).json(await porteiroService.cadastrarPorteiro(req.body));
     } catch (err) {
-        console.error("Erro ao cadastrar:", err);
-        res.status(500).json({ erro: "Erro ao cadastrar porteiro" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
 });
 
-rotasPorteiro.delete("/deletarPorteiro/:id", async (req, res) => {
+rotasPorteiro.delete("/deletarPorteiro/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const deletado = await porteiroService.deletarPorteiro(parseInt(req.params.id, 10));
-        if (deletado) return res.status(200).json(deletado);
-
-        return res.status(400).json('Erro ao deletar porteiro');
+        return res.status(200).json(await porteiroService.deletarPorteiro(parseInt(req.params.id, 10)));
     } catch (err) {
-        console.error("Erro ao deletar:", err);
-        res.status(404).json({ erro: "Porteiro não encontrado" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 
-rotasPorteiro.get("/listarTodosPorteiros", async (req, res) => {
+rotasPorteiro.get("/listarTodosPorteiros", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const porteiro = await porteiroService.listarTodosPorteiros();
-        if (porteiro) {
-            res.status(200).json(porteiro);
-        } else {
-            res.status(404).json({ erro: "Nenhum porteiro cadastrado" });
-        }
+        return res.status(200).json(await porteiroService.listarTodosPorteiros());
     } catch (err) {
-        console.error("Erro ao obter porteiro:", err);
-        res.status(500).json({ erro: "Erro ao obter porteiro" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 
-rotasPorteiro.get("/listarPorteiroPorId/:id", async (req, res) => {
+rotasPorteiro.get("/listarPorteiroPorId/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const porteiro = await porteiroService.listarPorteiroPorId(parseInt(req.params.id, 10));
-        if (porteiro) {
-            res.status(200).json(porteiro);
-        } else {
-            res.status(404).json({ erro: "Porteiro não encontrado" });
-        }
+        return res.status(200).json(await porteiroService.listarPorteiroPorId(parseInt(req.params.id, 10)));
     } catch (err) {
-        console.error("Erro ao obter porteiro:", err);
-        res.status(500).json({ erro: "Erro ao obter porteiro" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 
-rotasPorteiro.get("/buscarInformacoesAutenticacao", autenticarJWT, async (req, res) => {
+rotasPorteiro.get("/buscarInformacoesAutenticacao", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         const { id } = (req as any).user;
-        console.log('Informacoes ID', id);
-        console.log('requisicao user:', (req as any).user);
-        const porteiro = await porteiroService.listarPorteiroPorId(id);
-
-        if (porteiro) return res.status(200).json(porteiro);
-        return res.status(404).json({ erro: "Porteiro não encontrado" });
+        return res.status(200).json(await porteiroService.listarPorteiroPorId(id));
     } catch (err) {
-        return res.status(500).json({ erro: "Erro ao obter Usuário" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 
 rotasPorteiro.post("/login", async (req, res) => {
     const { chapa, senha } = req.body;
     try {
-        const token = await porteiroService.login(chapa, senha);
-        if (token) {
-            res.status(200).json({ token });
-        } else {
-            res.status(401).json({ erro: "Credenciais inválidas" });
-        }
+        return res.status(200).json({token: await porteiroService.login(chapa, senha)});
     } catch (err) {
-        console.error("Erro no login:", err);
-        res.status(500).json({ erro: "Erro interno no login" });
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 });
 
@@ -90,26 +61,19 @@ rotasPorteiro.put("/alterarSenha/:chapa", async (req, res) => {
     const { chapa } = req.params;
     const { senha } = req.body;
     try {
-        const senhaAlterada = await porteiroService.alterarSenha(chapa, senha);
-        if (senhaAlterada) return res.status(201).json(senhaAlterada);
-        return res.status(400).json('Erro ao alterar a senha');
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ erro: "Erro interno na alteração de senha" });
+        return res.status(201).json(await porteiroService.alterarSenha(chapa, senha));
+    } catch (err) {
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 })
 
-rotasPorteiro.put("/editarPorteiro/:id", async (req, res) => {
-    const { id } = req.params;
-    const { senha, papel } = req.body;
-
+rotasPorteiro.put("/editarPorteiro/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        const porteiroAlterado = await porteiroService.editarUsuario(parseInt(id, 10), senha, papel);
-        if (porteiroAlterado) return res.status(201).json(porteiroAlterado);
-        return res.status(400).json('Erro ao alterar o porteiro');
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ erro: "Erro interno na alteração de porteiro" });
+        const { id } = req.params;
+        const { senha, papel } = req.body;
+        return res.status(201).json(await porteiroService.editarUsuario(parseInt(id, 10), senha, papel));
+    } catch (err) {
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message })
     }
 })
 
