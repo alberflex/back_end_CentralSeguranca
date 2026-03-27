@@ -43,7 +43,7 @@ rotasControleAcesso.get("/listarControleAcessoPorId/:id", autenticarJWT, context
 
 rotasControleAcesso.get("/descobreVisitanteID/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        return res.status(200).json(await controleAcesso.descobreVisitanteID(Number(req.params.id)));
+        return res.status(200).json({ idVisitante: await controleAcesso.descobreVisitanteID(Number(req.params.id)) });
     } catch (err) {
         if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }
