@@ -140,7 +140,7 @@ export class ControleVeiculoService extends BaseService {
                         <p><strong>Portaria:</strong> ${nomesResponsaveis.nome_porteiro_saida}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
-                        <p><strong>Condição do veículo na saída:</strong> ${cadastro.condicaoSaida}</p>
+                        <p><strong>Condição do veículo na saída:</strong> ${cadastro.condicao_saida}</p>
                         <p><strong>Destino:</strong> ${cadastro.localizacao} - ${cadastro.destino}</p>
                         <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
                         <p><strong>Data:</strong> ${dataAtual}</p>
@@ -262,8 +262,8 @@ export class ControleVeiculoService extends BaseService {
                         <p><strong>Porteiro entrada:</strong> ${nomesResponsaveis.nome_porteiro_entrada}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>
                         <p><strong>Modelo:</strong> ${veiculo.modelo}</p>
-                        <p><strong>Condição do veículo na saída:</strong> ${dados.condicaoSaida}</p>
-                        <p><strong>Condição do veículo na entrada:</strong> ${dados.condicaoEntrada}</p>
+                        <p><strong>Condição do veículo na saída:</strong> ${dados.condicao_saida}</p>
+                        <p><strong>Condição do veículo na entrada:</strong> ${dados.condicao_entrada}</p>
                         <p><strong>Destino:</strong>${dados.localizacao} - ${dados.destino}</p>
                         <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
                         <p><strong>Km Final:</strong> ${dados.km_final_veiculo}</p>

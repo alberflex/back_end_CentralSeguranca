@@ -117,4 +117,12 @@ rotasVisitante.get("/selecionaPorCPF/:CPF", autenticarJWT, contextoMiddleware, a
     }
 });
 
+rotasVisitante.get("/dashboardVisitante", autenticarJWT, contextoMiddleware, async (req, res) => {
+    try {
+        return res.status(200).json(await visitanteService.visitantesMaisPresentes());
+    } catch (err) {
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
+    }
+});
+
 export default rotasVisitante;

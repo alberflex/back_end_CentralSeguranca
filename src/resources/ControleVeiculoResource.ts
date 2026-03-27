@@ -22,7 +22,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
             .input("idResponsavel", sql.VarChar, cadastro.idResponsavel)
             .input("localizacao", sql.VarChar, cadastro.localizacao)
             .input("idResponsavelAutorizacao", sql.VarChar, cadastro.idResponsavelAutorizacao)
-            .input("condicao_saida", sql.VarChar, cadastro.condicaoSaida)
+            .input("condicao_saida", sql.VarChar, cadastro.condicao_saida)
             .query(`INSERT INTO cs_controleVeiculo 
                         (   idVeiculo,
                             destino,
@@ -163,7 +163,7 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
             .input("horario_chegada", sql.VarChar, horaAtualBrasiliaString())
             .input("km_final_veiculo", sql.Numeric, dados.km_final_veiculo)
             .input("idPorteiroEntrada", sql.Int, dados.idPorteiroEntrada)
-            .input("condicao_entrada", sql.VarChar, dados.condicaoEntrada)
+            .input("condicao_entrada", sql.VarChar, dados.condicao_entrada)
             .query(`    UPDATE cs_controleVeiculo 
                         SET 
                             destino = @destino, 

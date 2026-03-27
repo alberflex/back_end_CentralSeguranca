@@ -1,7 +1,7 @@
 import { IVisitanteRepository } from "../data/repositories/VisitanteRepository";
 import { conexaoMSSQL } from "../db";
 import { Visitante } from "../domain";
-import { IVisitante } from "../interface/IVisitante";
+import { IVisitante, IVisitanteDashboard } from "../interface/IVisitante";
 import sql from 'mssql';
 
 export class VisitanteResource implements IVisitanteRepository {
@@ -69,6 +69,28 @@ export class VisitanteResource implements IVisitanteRepository {
 
         return resultado.recordset[0] as Visitante;
     }
+
+    public async dashboardVisitante(): Promise<IVisitanteDashboard[]> {
+        const pool = await conexaoMSSQL();
+        const resultado = await pool.request()
+            .query(`SELECT TOP 10
+                YEAR(ca.data_entrada) AS ano,
+                DATENAME(MONTH, ca.data_entrada) AS mes,
+                v.nome,
+                COUNT(*) AS total_visitas
+            FROM cs_controleAcesso ca
+            INNER JOIN cs_visitante v ON v.id = ca.idVisitante
+            GROUP BY 
+                YEAR(ca.data_entrada),
+                MONTH(ca.data_entrada),
+                DATENAME(MONTH, ca.data_entrada),
+                v.nome
+            ORDER BY 
+                ano DESC,
+                total_visitas DESC;`);
+        return resultado.recordset as IVisitanteDashboard[];
+    }
+
 
     public async selecionaPorCPF(CPF: string): Promise<Visitante> {
         const pool = await conexaoMSSQL();

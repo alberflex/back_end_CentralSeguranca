@@ -5,6 +5,7 @@ import { BaseService } from "../helpers/BaseService";
 import { IVisitante } from "../interface/IVisitante";
 import { VisitanteResource } from "../resources/VisitanteResource";
 import { removeArquivoRede } from "../utils/ArmazenamentoRede";
+import { ErroAplicacao } from "../utils/Erros";
 import { LogService } from "./Log";
 
 export class VisitanteService extends BaseService {
@@ -78,6 +79,37 @@ export class VisitanteService extends BaseService {
         });
         return this.visitanteResource.listarVisitantePorId(id);
     }
+
+    public async visitantesMaisPresentes(): Promise<any> {
+        const dashboardVisitante = await this.visitanteResource.dashboardVisitante();
+
+        if (!dashboardVisitante || dashboardVisitante.length === 0) {
+            throw new ErroAplicacao("Informações dashboard nao encontradas", 404);
+        }
+
+        const agrupado = dashboardVisitante.reduce((acc, item) => {
+            const chave = `${item.ano}-${item.mes}`;
+
+            if (!acc[chave]) {
+                acc[chave] = {
+                    ano: item.ano,
+                    mes: item.mes,
+                    pessoas: []
+                };
+            }
+
+            acc[chave].pessoas.push({
+                nome: item.nome,
+                total_visitantes: item.total_visitas
+            });
+
+            return acc;
+        }, {} as Record<string, any>);
+
+        return Object.values(agrupado);
+    }
+
+    
 
     public async selecionaPorCPF(CPF: string): Promise<Visitante | null> {
         return await this.visitanteResource.selecionaPorCPF(CPF);
