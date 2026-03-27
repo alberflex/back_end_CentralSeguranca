@@ -7,6 +7,6 @@ export class UsuarioPontoResource {
         const resultado = await pool.request().query(
             `SELECT * FROM cs_usuarioControlePonto;`
         )
-        return resultado.recordset?.[0] as UsuarioPonto[];
+        return resultado.recordset as UsuarioPonto[];
     }
 }
