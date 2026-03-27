@@ -2,9 +2,9 @@ import { Router } from "express";
 import { VeiculoService } from "../../services/VeiculoService";
 import { armazenamentoRedeMulter } from "../../utils/ArmazenamentoRede";
 import { ErroAplicacao } from "../../utils/Erros";
-import multer from "multer";
 import { autenticarJWT } from "../../middleware/JWT";
 import { contextoMiddleware } from "../../middleware/contexto";
+import multer from "multer";
 
 const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VEICULOS");
 const upload = multer({ storage: storage });
@@ -54,6 +54,14 @@ rotasVeiculo.get("/listarTodosVeiculos", autenticarJWT, contextoMiddleware, asyn
         const { placa } = req.query;
 
         return res.status(200).json(await veiculoService.listarTodosVeiculos(placa as string));
+    } catch (err) {
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
+    }
+});
+
+rotasVeiculo.get("/dashboardVeiculo", autenticarJWT, contextoMiddleware, async (req, res) => {
+    try {
+        return res.status(200).json(await veiculoService.veiculosMaisUtilizados());
     } catch (err) {
         if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }

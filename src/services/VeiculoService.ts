@@ -27,6 +27,35 @@ export class VeiculoService extends BaseService {
         return this.veiculoResource.cadastrarVeiculo(veiculo);
     }
 
+    public async veiculosMaisUtilizados(): Promise<any> {
+        const dashboardVeiculo = await this.veiculoResource.veiculosMaisUtilizados();
+
+        if (!dashboardVeiculo || dashboardVeiculo.length === 0) {
+            throw new ErroAplicacao("Informações dashboard nao encontradas", 404);
+        }
+
+        const agrupado = dashboardVeiculo.reduce((acc, item) => {
+            const chave = `${item.ano}-${item.mes}`;
+
+            if (!acc[chave]) {
+                acc[chave] = {
+                    ano: item.ano,
+                    mes: item.mes,
+                    veiculos: []
+                };
+            }
+
+            acc[chave].veiculos.push({
+                placa: item.placa,
+                total_utilizacoes: item.total_utilizacoes
+            });
+
+            return acc;
+        }, {} as Record<string, any>);
+
+        return Object.values(agrupado);
+    }
+
     public async deletarVeiculo(id: number): Promise<Veiculo> {
         const buscarVeiculo = await this.veiculoResource.listarVeiculoPorId(id);
         if (!buscarVeiculo) throw new ErroAplicacao("Controle veículo não encontrado", 404);

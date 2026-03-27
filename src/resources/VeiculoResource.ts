@@ -1,9 +1,48 @@
 import { IVeiculoRepository } from "../data/repositories/VeiculoRepository";
 import { Veiculo, VeiculoUpdate } from "../domain";
 import { conexaoMSSQL } from "../db";
+import { IVeiculoDashboard } from "../interface/IVeiculo";
 import sql from 'mssql';
 
 export class VeiculoResource implements IVeiculoRepository {
+
+    public async veiculosMaisUtilizados(): Promise<IVeiculoDashboard[]> {
+        const pool = await conexaoMSSQL();
+        await pool.request().query(`SET LANGUAGE Portuguese;`);
+
+        const resultado = await pool.request().query(`
+            SELECT 
+                ve.placa,
+                YEAR(cv.data_solicitacao) AS ano,
+                CASE MONTH(cv.data_solicitacao)
+                    WHEN 1 THEN 'Janeiro'
+                    WHEN 2 THEN 'Fevereiro'
+                    WHEN 3 THEN 'Março'
+                    WHEN 4 THEN 'Abril'
+                    WHEN 5 THEN 'Maio'
+                    WHEN 6 THEN 'Junho'
+                    WHEN 7 THEN 'Julho'
+                    WHEN 8 THEN 'Agosto'
+                    WHEN 9 THEN 'Setembro'
+                    WHEN 10 THEN 'Outubro'
+                    WHEN 11 THEN 'Novembro'
+                    WHEN 12 THEN 'Dezembro'
+                END AS mes,
+                COUNT(*) AS total_utilizacoes
+            FROM cs_controleVeiculo cv
+            INNER JOIN cs_veiculo ve 
+                ON cv.idVeiculo = ve.id
+            GROUP BY 
+                ve.placa,
+                YEAR(cv.data_solicitacao),
+                MONTH(cv.data_solicitacao)
+            ORDER BY 
+                ano DESC,
+                MONTH(cv.data_solicitacao);   
+            `)
+
+        return resultado.recordset as IVeiculoDashboard[];
+    }
 
     public async cadastrarVeiculo(veiculo: Veiculo): Promise<Veiculo> {
         const pool = await conexaoMSSQL();
