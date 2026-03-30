@@ -22,7 +22,8 @@ export class VeiculoService extends BaseService {
             tela: ETelas.VEICULO,
             acao: EAcao.CADASTRO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosDepois: veiculo
         });
         return this.veiculoResource.cadastrarVeiculo(veiculo);
     }
@@ -64,32 +65,20 @@ export class VeiculoService extends BaseService {
             tela: ETelas.VEICULO,
             acao: EAcao.EXCLUSAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: buscarVeiculo
         });
 
         return this.veiculoResource.deletarVeiculo(buscarVeiculo.id!);
     }
 
     public listarTodosVeiculos(placa?: string): Promise<Veiculo[]> {
-        this.logService.cadastrarLog({
-            tela: ETelas.VEICULO,
-            acao: EAcao.LISTAGEM,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
         return this.veiculoResource.listarTodosVeiculos(placa);
     }
 
     public async listarVeiculoPorId(id: number): Promise<Veiculo> {
         const buscarVeiculoPorID = await this.veiculoResource.listarVeiculoPorId(id)
         if (!buscarVeiculoPorID) throw new ErroAplicacao(`Veículo por ID ${id} não encontrado`, 404);
-
-        this.logService.cadastrarLog({
-            tela: ETelas.VEICULO,
-            acao: EAcao.LISTAGEMPORID,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
 
         return buscarVeiculoPorID;
     }
@@ -98,13 +87,18 @@ export class VeiculoService extends BaseService {
         return this.veiculoResource.alteraKilometragem(id, kilometragem);
     }
 
-    public editarVeiculo(veiculo: VeiculoUpdate, id: number): Promise<VeiculoUpdate | null> {
+    public async editarVeiculo(veiculo: VeiculoUpdate, id: number): Promise<VeiculoUpdate | null> {
+        const dadosEditados = await this.veiculoResource.editarVeiculo(veiculo, id)
+
         this.logService.cadastrarLog({
             tela: ETelas.VEICULO,
             acao: EAcao.EDICAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: await this.veiculoResource.listarVeiculoPorId(id),
+            dadosDepois: dadosEditados
         });
-        return this.veiculoResource.editarVeiculo(veiculo, id);
+
+        return dadosEditados;
     }
 }

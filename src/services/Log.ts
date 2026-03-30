@@ -11,6 +11,8 @@ interface ILogParams {
     acao: EAcao;
     idUsuario: number;
     nomeUsuario?: string;
+    dadosAntes?: any;
+    dadosDepois?: any;
 }
 
 export class LogService {

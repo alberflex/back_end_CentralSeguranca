@@ -32,6 +32,14 @@ rotasControleVeiculo.get("/listarTodosVeiculos", autenticarJWT, contextoMiddlewa
     }
 });
 
+rotasControleVeiculo.get("/localizacoesMaisCadastradas", autenticarJWT, contextoMiddleware, async (req, res) => {
+    try {
+        return res.status(200).json(await controleVeiculo.localizacoesMaisCadastradas());
+    } catch (err) {
+        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
+    }
+});
+
 rotasControleVeiculo.get("/listarVeiculoPorId/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         return res.status(200).json(await controleVeiculo.listarControlesVeiculosPorID(parseInt(req.params.id, 10)))
@@ -42,7 +50,7 @@ rotasControleVeiculo.get("/listarVeiculoPorId/:id", autenticarJWT, contextoMiddl
 
 rotasControleVeiculo.put("/editarSolicitacao/:id", autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
-        return res.status(201).json( await controleVeiculo.editarSolicitacao(parseInt(req.params.id, 10), req.body))
+        return res.status(201).json(await controleVeiculo.editarSolicitacao(parseInt(req.params.id, 10), req.body))
     } catch (err) {
         if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
     }

@@ -4,6 +4,7 @@ import { ETelas } from "../enums/ETelas";
 import { BaseService } from "../helpers/BaseService";
 import { IControleVeiculo } from "../interface/IControleVeiculo";
 import { IUsuario } from "../interface/IUsuario";
+import { ILocalizacoesMaisCadastradasDashboard } from "../interface/IVeiculo";
 import { ControleVeiculoResource } from "../resources/ControleVeiculoResource";
 import { VeiculoResource } from "../resources/VeiculoResource";
 import { EmailService } from "../utils/Email";
@@ -40,7 +41,8 @@ export class ControleVeiculoService extends BaseService {
                 tela: ETelas.CONTROLE_VEICULO,
                 acao: EAcao.CADASTRO,
                 idUsuario: this.user.id,
-                nomeUsuario: this.user.nome
+                nomeUsuario: this.user.nome,
+                dadosDepois: controleCadastrado
             });
 
             const listarControleCadastrado = await this.controleVeiculo.listarControlesVeiculosPorID(controleCadastrado.id);
@@ -197,7 +199,9 @@ export class ControleVeiculoService extends BaseService {
                 tela: ETelas.CONTROLE_VEICULO,
                 acao: EAcao.EDICAO,
                 idUsuario: this.user.id,
-                nomeUsuario: this.user.nome
+                nomeUsuario: this.user.nome,
+                dadosAntes: await this.controleVeiculo.listarControlesVeiculosPorID(id),
+                dadosDepois: controleEditado,
             });
 
             const listarControle = await this.controleVeiculo.listarControlesVeiculosPorID(controleEditado.id);
@@ -311,7 +315,8 @@ export class ControleVeiculoService extends BaseService {
             tela: ETelas.CONTROLE_VEICULO,
             acao: EAcao.EXCLUSAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: buscarControleVeiculo
         });
 
         return this.controleVeiculo.deletarControleVeiculo(buscarControleVeiculo.id);
@@ -322,13 +327,6 @@ export class ControleVeiculoService extends BaseService {
             throw new ErroAplicacao("É necessário informar dataInicio e dataFim juntos.", 400);
         }
 
-        this.logService.cadastrarLog({
-            tela: ETelas.CONTROLE_VEICULO,
-            acao: EAcao.LISTAGEM,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
-
         return this.controleVeiculo.listarTodosControlesVeiculos(dataInicio, dataFim);
     }
 
@@ -336,18 +334,39 @@ export class ControleVeiculoService extends BaseService {
         const buscarControleVeiculoPorID = await this.controleVeiculo.listarControlesVeiculosPorID(id)
         if (!buscarControleVeiculoPorID) throw new ErroAplicacao(`Controle veículo por ID ${id} não encontrado`, 404);
 
-        this.logService.cadastrarLog({
-            tela: ETelas.CONTROLE_VEICULO,
-            acao: EAcao.LISTAGEMPORID,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
-
         return buscarControleVeiculoPorID;
     }
 
     public contarSolicitacaoAberto(): Promise<number> {
         return this.controleVeiculo.contarSolicitacoesVeiculosEmAberto();
+    }
+
+    public async localizacoesMaisCadastradas(): Promise<ILocalizacoesMaisCadastradasDashboard[]> {
+        const localizacoesMaisAcessadas = await this.veiculoResource.localizacoesMaisCadastradas();
+        if (!localizacoesMaisAcessadas || localizacoesMaisAcessadas.length === 0) {
+            throw new ErroAplicacao("Informações dashboard nao encontradas", 404);
+        }
+
+        const agrupado = localizacoesMaisAcessadas.reduce((acc, item) => {
+            const chave = `${item.ano}-${item.mes}`;
+
+            if (!acc[chave]) {
+                acc[chave] = {
+                    ano: item.ano,
+                    mes: item.mes,
+                    trajetos: []
+                };
+            }
+
+            acc[chave].trajetos.push({
+                localizacao: item.localizacao,
+                rotas: item.rotas
+            });
+
+            return acc;
+        }, {} as Record<string, any>);
+
+        return Object.values(agrupado);
     }
 
     public async listarPessoal(termo?: string): Promise<IUsuario[] | null> {

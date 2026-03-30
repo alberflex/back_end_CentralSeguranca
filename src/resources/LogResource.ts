@@ -5,18 +5,17 @@ import sql from 'mssql';
 
 export class LogResource implements ILogRepository {
 
-    public async cadastraLog(dados: { tela: string; acao: string; idUsuario: number; nomeUsuario?: string; }): Promise<boolean> {
+    public async cadastraLog(dados: { mensagem: string, dadosAntes?: any, dadosDepois?: any}): Promise<boolean> {
         const pool = await conexaoMSSQL();
         const result = await pool.request()
-            .input("tela", sql.VarChar, dados.tela)
-            .input("acao", sql.VarChar, dados.acao)
-            .input("idUsuario", sql.Int, dados.idUsuario)
-            .input("nomeUsuario", sql.VarChar, dados.nomeUsuario)
+            .input("mensagem", sql.VarChar, dados.mensagem)
+            .input("dadosAntes", sql.NVarChar, JSON.stringify(dados.dadosAntes ?? null))
+            .input("dadosDepois", sql.NVarChar, JSON.stringify(dados.dadosDepois ?? null))
             .query(`
             INSERT INTO cs_log 
-                (tela, acao, idUsuario, nomeUsuario)
+                (mensagem, dadosAntes, dadosDepois)
             VALUES
-                (@tela, @acao, @idUsuario, @nomeUsuario);
+                (@mensagem, @dadosAntes, @dadosDepois);
         `);
 
         return result.rowsAffected[0] > 0;
@@ -38,16 +37,10 @@ export class LogResource implements ILogRepository {
         const query = `
                 SELECT 
                     l.id,
-                    l.tela,
-                    l.acao,
-                    l.idUsuario,
-                    l.nomeUsuario,
-                    l.dataHora,
-                    p.nome AS nomeUsuarioFK
+                    l.mensagem
                 FROM cs_log l
-                LEFT JOIN cs_porteiro p ON p.id = l.idUsuario
                 ${filtroData}
-                ORDER BY l.dataHora DESC;
+                ORDER BY l.id, DESC;
             `;
 
         const resultado = await request.query(query);

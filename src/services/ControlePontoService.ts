@@ -22,7 +22,8 @@ export class ControlePontoService extends BaseService {
             tela: ETelas.CONTROLE_PONTO,
             acao: EAcao.CADASTRO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosDepois: { idPorteiro, chapa }
         });
 
         return this.controlePontoResource.cadastrarControlePonto(idPorteiro, chapa);
@@ -36,7 +37,8 @@ export class ControlePontoService extends BaseService {
             tela: ETelas.CONTROLE_PONTO,
             acao: EAcao.EXCLUSAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: buscarControlePonto
         });
 
         return this.controlePontoResource.deletarControlePonto(buscarControlePonto.id);
@@ -48,26 +50,12 @@ export class ControlePontoService extends BaseService {
             throw new ErroAplicacao("É necessário informar dataInicio e dataFim juntos.", 400);
         }
 
-        this.logService.cadastrarLog({
-            tela: ETelas.CONTROLE_PONTO,
-            acao: EAcao.LISTAGEM,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
-
         return this.controlePontoResource.listarTodosPontos(dataInicio, dataFim);
     }
 
     public async listarPontosPorID(id: number): Promise<ControlePonto> {
         const buscarPontoPorID = await this.controlePontoResource.listarPontosPorID(id);
         if (!buscarPontoPorID) throw new ErroAplicacao(`Controle ponto por ID ${id} não encontrado`, 404);
-
-        this.logService.cadastrarLog({
-            tela: ETelas.CONTROLE_PONTO,
-            acao: EAcao.LISTAGEMPORID,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
 
         return buscarPontoPorID;
     }

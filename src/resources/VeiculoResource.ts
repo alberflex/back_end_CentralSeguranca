@@ -1,7 +1,7 @@
 import { IVeiculoRepository } from "../data/repositories/VeiculoRepository";
 import { Veiculo, VeiculoUpdate } from "../domain";
 import { conexaoMSSQL } from "../db";
-import { IVeiculoDashboard } from "../interface/IVeiculo";
+import { ILocalizacoesMaisCadastradasDashboard, IVeiculoDashboard } from "../interface/IVeiculo";
 import sql from 'mssql';
 
 export class VeiculoResource implements IVeiculoRepository {
@@ -42,6 +42,29 @@ export class VeiculoResource implements IVeiculoRepository {
             `)
 
         return resultado.recordset as IVeiculoDashboard[];
+    }
+
+    public async localizacoesMaisCadastradas(): Promise<ILocalizacoesMaisCadastradasDashboard[]> {
+        const pool = await conexaoMSSQL();
+        await pool.request().query(`SET LANGUAGE Portuguese;`);
+
+        const resultado = await pool.request().query(`
+                SELECT TOP 10
+                YEAR(data_solicitacao) AS ano,
+                DATENAME(MONTH, data_solicitacao) AS mes,
+                UPPER(localizacao) COLLATE Latin1_General_CI_AI AS localizacao,
+                COUNT(*) AS rotas
+            FROM cs_controleVeiculo
+            GROUP BY 
+                YEAR(data_solicitacao),
+                MONTH(data_solicitacao),
+                DATENAME(MONTH, data_solicitacao),
+                UPPER(localizacao) COLLATE Latin1_General_CI_AI
+            ORDER BY 
+                ano DESC,
+                rotas DESC;`)
+
+        return resultado.recordset as ILocalizacoesMaisCadastradasDashboard[];
     }
 
     public async cadastrarVeiculo(veiculo: Veiculo): Promise<Veiculo> {

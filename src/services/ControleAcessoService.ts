@@ -24,7 +24,8 @@ export class ControleAcessoService extends BaseService {
             tela: ETelas.CONTROLE_ACESSO,
             acao: EAcao.CADASTRO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosDepois: dados
         });
 
         return this.controleAcessoResource.cadastrarControleAcesso(dados);
@@ -38,7 +39,8 @@ export class ControleAcessoService extends BaseService {
             tela: ETelas.CONTROLE_ACESSO,
             acao: EAcao.EXCLUSAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: buscarControleAcesso
         });
 
         return this.controleAcessoResource.deletarControleAcesso(buscarControleAcesso.id);
@@ -50,26 +52,12 @@ export class ControleAcessoService extends BaseService {
             throw new ErroAplicacao("É necessário informar dataInicio e dataFim juntos.", 400);
         }
 
-        this.logService.cadastrarLog({
-            tela: ETelas.CONTROLE_ACESSO,
-            acao: EAcao.LISTAGEM,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
-
         return this.controleAcessoResource.listarTodosControleAcessos(dataInicio, dataFim);
     }
 
     public async listarControleAcessoPorID(id: number): Promise<ControleAcesso> {
         const buscarControleAcessoPorID = await this.controleAcessoResource.listarControleAcessoPorId(id);
         if (!buscarControleAcessoPorID) throw new ErroAplicacao(`Controle acesso por ID ${id} não encontrado`, 404);
-
-        this.logService.cadastrarLog({
-            tela: ETelas.CONTROLE_ACESSO,
-            acao: EAcao.LISTAGEMPORID,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
 
         return buscarControleAcessoPorID;
     }
@@ -85,14 +73,18 @@ export class ControleAcessoService extends BaseService {
             dadosAtualizados.hora_saida = null;
         }
 
-         this.logService.cadastrarLog({
+        const controleAcessoEditado = this.controleAcessoResource.editarControleAcesso(dadosAtualizados, id)
+
+        this.logService.cadastrarLog({
             tela: ETelas.CONTROLE_ACESSO,
             acao: EAcao.EDICAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: await this.controleAcessoResource.listarControleAcessoPorId(id),
+            dadosDepois: controleAcessoEditado
         });
 
-        return this.controleAcessoResource.editarControleAcesso(dadosAtualizados, id);
+        return controleAcessoEditado
     }
 
     public contarAcessosEmAberto(): Promise<number> {

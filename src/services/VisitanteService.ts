@@ -24,7 +24,8 @@ export class VisitanteService extends BaseService {
             tela: ETelas.VISITANTE,
             acao: EAcao.CADASTRO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosDepois: visitante
         });
 
         return this.visitanteResource.cadastrarVisitante(visitante);
@@ -41,7 +42,9 @@ export class VisitanteService extends BaseService {
             tela: ETelas.VISITANTE,
             acao: EAcao.EDICAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: visitanteAtual,
+            dadosDepois: visitanteEditado
         });
 
         if (visitante.caminho_foto_visitante && visitanteAtual.caminho_foto_visitante && visitante.caminho_foto_visitante !== visitanteAtual.caminho_foto_visitante) { removeArquivoRede(visitanteAtual.caminho_foto_visitante); }
@@ -50,33 +53,24 @@ export class VisitanteService extends BaseService {
     }
 
     public deletarVisitante(id: number): Promise<Visitante | null> {
+        const dadosExcluidos = this.visitanteResource.deletarVisitante(id);
+
         this.logService.cadastrarLog({
             tela: ETelas.VISITANTE,
             acao: EAcao.EXCLUSAO,
             idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
+            nomeUsuario: this.user.nome,
+            dadosAntes: dadosExcluidos
         });
 
-        return this.visitanteResource.deletarVisitante(id);
+        return dadosExcluidos;
     }
 
     public listarTodosVisitantes(): Promise<Visitante[]> {
-        this.logService.cadastrarLog({
-            tela: ETelas.VISITANTE,
-            acao: EAcao.LISTAGEM,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
         return this.visitanteResource.listarTodosVisitantes();
     }
 
     public listarVisitantePorId(id: number): Promise<Visitante | null> {
-        this.logService.cadastrarLog({
-            tela: ETelas.VISITANTE,
-            acao: EAcao.LISTAGEMPORID,
-            idUsuario: this.user.id,
-            nomeUsuario: this.user.nome
-        });
         return this.visitanteResource.listarVisitantePorId(id);
     }
 
@@ -108,8 +102,6 @@ export class VisitanteService extends BaseService {
 
         return Object.values(agrupado);
     }
-
-    
 
     public async selecionaPorCPF(CPF: string): Promise<Visitante | null> {
         return await this.visitanteResource.selecionaPorCPF(CPF);

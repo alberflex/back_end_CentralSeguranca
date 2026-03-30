@@ -5,6 +5,7 @@ export interface LogObject {
     idUsuario: number;
     nomeUsuario: string;
     dataHora: Date;
+    mensagem: string;
 }
 
 export class Log {
@@ -14,6 +15,7 @@ export class Log {
     idUsuario: number;
     tela: string;
     acao: string;
+    mensagem: string;
 
     constructor(properties: LogObject) {
         this.id = properties.id;
@@ -22,5 +24,6 @@ export class Log {
         this.idUsuario = properties.idUsuario;
         this.tela = properties.tela;
         this.acao = properties.acao;
+        this.mensagem = properties.mensagem;
     }
 }
