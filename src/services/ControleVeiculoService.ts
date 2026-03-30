@@ -163,7 +163,8 @@ export class ControleVeiculoService extends BaseService {
                 'almox.geral@alberflex.ind.br',
                 'marcio.vieira@alberflex.ind.br',
                 'ivan.junior@alberflex.ind.br',
-                'informatica@alberflex.com.br'
+                'informatica@alberflex.com.br',
+                'portaria@alberflex.ind.br'
             ];
 
             for (const email of emails) await objEmail.enviarEmail(email, 'Rastreio veículo', mensagemEmail);
@@ -287,7 +288,8 @@ export class ControleVeiculoService extends BaseService {
                 'almox.geral@alberflex.ind.br',
                 'marcio.vieira@alberflex.ind.br',
                 'ivan.junior@alberflex.ind.br',
-                'informatica@alberflex.com.br'
+                'informatica@alberflex.com.br',
+                'portaria@alberflex.ind.br'
             ];
 
             for (const email of destinatarios) {

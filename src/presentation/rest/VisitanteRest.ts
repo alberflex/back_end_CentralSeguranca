@@ -3,10 +3,10 @@ import { VisitanteService } from "../../services/VisitanteService";
 import { armazenamentoRedeMulter } from "../../utils/ArmazenamentoRede";
 import { autenticarJWT } from "../../middleware/JWT";
 import { ErroAplicacao } from "../../utils/Erros";
+import { contextoMiddleware } from "../../middleware/contexto";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { contextoMiddleware } from "../../middleware/contexto";
 
 const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VISITANTES\\IMAGENS\\");
 const upload = multer({ storage: storage });
