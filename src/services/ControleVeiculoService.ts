@@ -212,28 +212,21 @@ export class ControleVeiculoService extends BaseService {
             const nomesResponsaveis = await this.controleVeiculo.listarNomesResponsaveis(listarControle.id);
             if (!nomesResponsaveis) return controleEditado;
 
-            function formatarDataHora(data: string | Date, hora: string | Date): string {
-                const d = new Date(data);
+            function formatarDataHora(data: string, hora: string | Date): string {
+                const [year, month, day] = data.split('T')[0].split('-');
+
                 let h = 0, m = 0;
 
                 if (typeof hora === 'string') {
-                    const [hh, mm] = hora.split(':');
-                    h = parseInt(hh);
-                    m = parseInt(mm);
+                    const dateHora = new Date(hora);
+                    h = dateHora.getUTCHours();
+                    m = dateHora.getUTCMinutes();
                 } else if (hora instanceof Date) {
-                    h = hora.getHours();
-                    m = hora.getMinutes();
+                    h = hora.getUTCHours();
+                    m = hora.getUTCMinutes();
                 }
 
-                d.setHours(h, m);
-
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const year = d.getFullYear();
-                const hours = String(d.getHours()).padStart(2, '0');
-                const minutes = String(d.getMinutes()).padStart(2, '0');
-
-                return `${day}/${month}/${year} ${hours}:${minutes}`;
+                return `${day}/${month}/${year} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             }
 
             const mensagemEmail = `
@@ -272,8 +265,8 @@ export class ControleVeiculoService extends BaseService {
                         <p><strong>Destino:</strong>${dados.localizacao} - ${dados.destino}</p>
                         <p><strong>Km Inicial:</strong> ${veiculo.km_atual}</p>
                         <p><strong>Km Final:</strong> ${dados.km_final_veiculo}</p>
-                        <p><strong>Data saída:</strong> ${formatarDataHora(controleEditado.dataSolicitacao, controleEditado.horarioSaida)}</p>
-                        <p><strong>Data retorno:</strong> ${formatarDataHora(controleEditado.dataChegada, controleEditado.horarioChegada)}</p>
+                        <p><strong>Data saída:</strong> ${formatarDataHora(controleEditado.dataSolicitacao.toISOString(), controleEditado.horarioSaida)}</p>
+                        <p><strong>Data retorno:</strong> ${formatarDataHora(controleEditado.dataChegada.toISOString(), controleEditado.horarioChegada)}</p>
                         <div class="btn-container">
                             <a href="http://centralseg.alberflex.com.br:3000/" class="btn">Acessar Sistema</a>
                         </div>
