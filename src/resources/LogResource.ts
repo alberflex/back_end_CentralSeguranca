@@ -5,7 +5,7 @@ import sql from 'mssql';
 
 export class LogResource implements ILogRepository {
 
-    public async cadastraLog(dados: { mensagem: string, dadosAntes?: any, dadosDepois?: any}): Promise<boolean> {
+    public async cadastraLog(dados: { mensagem: string, dadosAntes?: any, dadosDepois?: any }): Promise<boolean> {
         const pool = await conexaoMSSQL();
         const result = await pool.request()
             .input("mensagem", sql.VarChar, dados.mensagem)
@@ -21,30 +21,18 @@ export class LogResource implements ILogRepository {
         return result.rowsAffected[0] > 0;
     }
 
-    public async listarTodosLogs(dataInicio?: string, dataFim?: string): Promise<Log[]> {
+    public async listarTodosLogs(): Promise<Log[]> {
         const pool = await conexaoMSSQL();
         const request = pool.request();
-
-        let filtroData = "";
-
-        if (!dataInicio && !dataFim) {
-            filtroData = "WHERE CAST(l.dataHora AS DATE) = CAST(GETDATE() AS DATE)";
-        } else if (dataInicio && dataFim) {
-            filtroData = "WHERE CAST(l.dataHora AS DATE) BETWEEN @dataInicio AND @dataFim";
-            request.input("dataInicio", dataInicio);
-            request.input("dataFim", dataFim);
-        }
         const query = `
-                SELECT 
-                    l.id,
-                    l.mensagem
-                FROM cs_log l
-                ${filtroData}
-                ORDER BY l.id, DESC;
-            `;
+        SELECT 
+            l.id,
+            l.mensagem,
+            l.dadosAntes,
+            l.dadosDepois
+        FROM cs_log l ORDER BY l.id DESC; `;
 
         const resultado = await request.query(query);
-
         return resultado.recordset as Log[];
     }
 

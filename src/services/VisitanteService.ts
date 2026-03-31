@@ -6,7 +6,7 @@ import { IVisitante } from "../interface/IVisitante";
 import { VisitanteResource } from "../resources/VisitanteResource";
 import { removeArquivoRede } from "../utils/ArmazenamentoRede";
 import { ErroAplicacao } from "../utils/Erros";
-import { LogService } from "./Log";
+import { LogService } from "./LogService";
 
 export class VisitanteService extends BaseService {
     private visitanteResource: VisitanteResource;

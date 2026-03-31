@@ -4,7 +4,7 @@ import { ETelas } from "../enums/ETelas";
 import { BaseService } from "../helpers/BaseService";
 import { VeiculoResource } from "../resources/VeiculoResource";
 import { ErroAplicacao } from "../utils/Erros";
-import { LogService } from "./Log";
+import { LogService } from "./LogService";
 
 export class VeiculoService extends BaseService {
     private veiculoResource: VeiculoResource;

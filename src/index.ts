@@ -9,7 +9,7 @@ import rotasControleAcesso from "./presentation/rest/ControleAcessoRest";
 import rotasPorteiro from "./presentation/rest/PorteiroRest";
 import rotasUsuarioPonto from "./presentation/rest/UsuarioPontoRest";
 import rotasPessoal from "./presentation/rest/PessoalRest";
-import { contextoMiddleware } from "./middleware/contexto";
+import rotasLog from "./presentation/rest/LogRest";
 
 dotenv.config();
 
@@ -17,8 +17,6 @@ const app = express();
 
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
-
-app.listen(process.env.PORT_APP || null, () => { console.log(`Servidor rodando em http://localhost:${process.env.PORT_APP || null}`); });
 
 app.use("/porteiro", rotasPorteiro);
 app.use("/veiculo", rotasVeiculo);
@@ -28,6 +26,8 @@ app.use("/controleVeiculo", rotasControleVeiculo);
 app.use("/controleAcesso", rotasControleAcesso);
 app.use("/usuarioPonto", rotasUsuarioPonto);
 app.use("/pessoal", rotasPessoal);
+app.use("/log", rotasLog);
 
+app.listen(process.env.PORT_APP || null, () => { console.log(`Servidor rodando em http://localhost:${process.env.PORT_APP || null}`); });
 
 export default app;

@@ -6,7 +6,7 @@ import { ControleAcessoResource } from "../resources/ControleAcessoResource";
 import { dataAtualString } from "../utils/Data";
 import { ErroAplicacao } from "../utils/Erros";
 import { horaAtualBrasiliaString } from "../utils/Horario";
-import { LogService } from "./Log";
+import { LogService } from "./LogService";
 
 export class ControleAcessoService extends BaseService {
     private controleAcessoResource: ControleAcessoResource;

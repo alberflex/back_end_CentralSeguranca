@@ -12,4 +12,12 @@ export class PessoalService {
     public listarPessoal(nome?: string): Promise<Pessoal[]> {
         return this.pessoalResource.listarPessoal(nome);
     }
+
+    async listarUsuariosAprovadores(nome?: string): Promise<Pessoal[]> {
+        return this.pessoalResource.listarUsuariosAprovadores();
+    }
+
+    async listarPorChapa(chapa: string): Promise<Pessoal> {
+        return this.pessoalResource.listarPorChapa(chapa);
+    }
 }

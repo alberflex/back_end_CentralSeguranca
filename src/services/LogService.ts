@@ -36,11 +36,8 @@ export class LogService {
         } as any);
     }
 
-    public async listarTodosLogs(dataInicio?: string, dataFim?: string): Promise<Log[]> {
-        if ((dataInicio && !dataFim) || (!dataInicio && dataFim)) {
-            throw new ErroAplicacao("É necessário informar dataInicio e dataFim juntos.", 400);
-        }
-        return this.logResource.listarTodosLogs(dataInicio, dataFim);
+    public async listarTodosLogs(): Promise<Log[]> {
+        return this.logResource.listarTodosLogs();
     }
 
     public async listarLogPorID(id: number): Promise<Log> {

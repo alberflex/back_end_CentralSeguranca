@@ -9,7 +9,7 @@ import { ControleVeiculoResource } from "../resources/ControleVeiculoResource";
 import { VeiculoResource } from "../resources/VeiculoResource";
 import { EmailService } from "../utils/Email";
 import { ErroAplicacao } from "../utils/Erros";
-import { LogService } from "./Log";
+import { LogService } from "./LogService";
 
 export class ControleVeiculoService extends BaseService {
     private controleVeiculo: ControleVeiculoResource;

@@ -4,7 +4,7 @@ import { ETelas } from "../enums/ETelas";
 import { BaseService } from "../helpers/BaseService";
 import { ControlePontoResource } from "../resources/ControlePontoResource";
 import { ErroAplicacao } from "../utils/Erros";
-import { LogService } from "./Log";
+import { LogService } from "./LogService";
 
 export class ControlePontoService extends BaseService {
     private controlePontoResource: ControlePontoResource;
