@@ -11,34 +11,20 @@ export class VeiculoResource implements IVeiculoRepository {
         await pool.request().query(`SET LANGUAGE Portuguese;`);
 
         const resultado = await pool.request().query(`
-            SELECT 
+           SELECT
                 ve.placa,
-                YEAR(cv.data_solicitacao) AS ano,
-                CASE MONTH(cv.data_solicitacao)
-                    WHEN 1 THEN 'Janeiro'
-                    WHEN 2 THEN 'Fevereiro'
-                    WHEN 3 THEN 'Março'
-                    WHEN 4 THEN 'Abril'
-                    WHEN 5 THEN 'Maio'
-                    WHEN 6 THEN 'Junho'
-                    WHEN 7 THEN 'Julho'
-                    WHEN 8 THEN 'Agosto'
-                    WHEN 9 THEN 'Setembro'
-                    WHEN 10 THEN 'Outubro'
-                    WHEN 11 THEN 'Novembro'
-                    WHEN 12 THEN 'Dezembro'
-                END AS mes,
-                COUNT(*) AS total_utilizacoes
-            FROM cs_controleVeiculo cv
-            INNER JOIN cs_veiculo ve 
+                YEAR(GETDATE()) AS ano,
+                DATENAME(MONTH, GETDATE()) AS mes,
+                COUNT(cv.id) AS total_utilizacoes
+            FROM cs_veiculo ve
+            LEFT JOIN cs_controleVeiculo cv 
                 ON cv.idVeiculo = ve.id
+                AND MONTH(cv.data_solicitacao) = MONTH(GETDATE())
+                AND YEAR(cv.data_solicitacao) = YEAR(GETDATE())
             GROUP BY 
-                ve.placa,
-                YEAR(cv.data_solicitacao),
-                MONTH(cv.data_solicitacao)
+                ve.placa
             ORDER BY 
-                ano DESC,
-                MONTH(cv.data_solicitacao);   
+                total_utilizacoes DESC; 
             `)
 
         return resultado.recordset as IVeiculoDashboard[];
@@ -49,20 +35,19 @@ export class VeiculoResource implements IVeiculoRepository {
         await pool.request().query(`SET LANGUAGE Portuguese;`);
 
         const resultado = await pool.request().query(`
-                SELECT TOP 10
-                YEAR(data_solicitacao) AS ano,
-                DATENAME(MONTH, data_solicitacao) AS mes,
-                UPPER(localizacao) COLLATE Latin1_General_CI_AI AS localizacao,
-                COUNT(*) AS rotas
-            FROM cs_controleVeiculo
-            GROUP BY 
-                YEAR(data_solicitacao),
-                MONTH(data_solicitacao),
-                DATENAME(MONTH, data_solicitacao),
-                UPPER(localizacao) COLLATE Latin1_General_CI_AI
-            ORDER BY 
-                ano DESC,
-                rotas DESC;`)
+                SELECT 
+                    YEAR(GETDATE()) AS ano,
+                    DATENAME(MONTH, GETDATE()) AS mes,
+                    UPPER(localizacao) COLLATE Latin1_General_CI_AI AS localizacao,
+                    COUNT(cv.id) AS rotas
+                FROM cs_controleVeiculo cv
+                WHERE 
+                    cv.data_solicitacao >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+                    AND cv.data_solicitacao < DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
+                GROUP BY 
+                    UPPER(localizacao) COLLATE Latin1_General_CI_AI
+                ORDER BY 
+                    rotas DESC;`)
 
         return resultado.recordset as ILocalizacoesMaisCadastradasDashboard[];
     }

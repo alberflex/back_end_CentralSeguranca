@@ -74,20 +74,19 @@ export class VisitanteResource implements IVisitanteRepository {
         const pool = await conexaoMSSQL();
         const resultado = await pool.request()
             .query(`SELECT TOP 10
-                YEAR(ca.data_entrada) AS ano,
-                DATENAME(MONTH, ca.data_entrada) AS mes,
-                v.nome,
-                COUNT(*) AS total_visitas
-            FROM cs_controleAcesso ca
-            INNER JOIN cs_visitante v ON v.id = ca.idVisitante
-            GROUP BY 
-                YEAR(ca.data_entrada),
-                MONTH(ca.data_entrada),
-                DATENAME(MONTH, ca.data_entrada),
-                v.nome
-            ORDER BY 
-                ano DESC,
-                total_visitas DESC;`);
+                    YEAR(GETDATE()) AS ano,
+                    DATENAME(MONTH, GETDATE()) AS mes,
+                    v.nome,
+                    COUNT(ca.id) AS total_visitas
+                FROM cs_visitante v
+                LEFT JOIN cs_controleAcesso ca 
+                    ON ca.idVisitante = v.id
+                    AND MONTH(ca.data_entrada) = MONTH(GETDATE())
+                    AND YEAR(ca.data_entrada) = YEAR(GETDATE())
+                GROUP BY 
+                    v.nome
+                ORDER BY 
+                    total_visitas DESC;`);
         return resultado.recordset as IVisitanteDashboard[];
     }
 
