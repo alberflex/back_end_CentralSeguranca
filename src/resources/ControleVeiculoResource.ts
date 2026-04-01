@@ -102,39 +102,42 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
         }
 
         const resultado = await request.query(
-            `SELECT 
-                cv.id,
-                ve.placa,
-                cv.destino,
-                cv.data_solicitacao,
-                cv.horario_saida,
-                cv.km_inicial_veiculo as km_inicial_veiculo,
-                cv.data_chegada,
-                cv.horario_chegada,
-                cv.km_final_veiculo,
-                po.nome AS nome_porteiro_saida,
-                pe.nome AS nome_responsavel,
-                cv.localizacao,
-                po.nome AS nome_porteiro_entrada,
-                pe.nome AS nome_responsavel_autorizacao,
-                cv.condicao_saida,
-                cv.condicao_entrada
-            FROM cs_controleVeiculo cv
-            INNER JOIN cs_veiculo ve 
-                ON cv.idVeiculo = ve.id
-            INNER JOIN cs_porteiro po 
-                ON cv.idPorteiroSaida = po.id
-            INNER JOIN alb_pessoal pe 
-                ON cv.idResponsavel = pe.chapa
-            ${filtroData}
-            ORDER BY
-                CASE 
-                    WHEN cv.data_chegada IS NULL 
-                    AND cv.horario_chegada IS NULL THEN 0
-                    ELSE 1
-                END,
-                cv.data_solicitacao DESC,
-                cv.horario_saida DESC;`
+                                            `SELECT 
+                                                cv.id,
+                                                ve.placa,
+                                                cv.destino,
+                                                cv.data_solicitacao,
+                                                cv.horario_saida,
+                                                cv.km_inicial_veiculo as km_inicial_veiculo,
+                                                cv.data_chegada,
+                                                cv.horario_chegada,
+                                                cv.km_final_veiculo,
+                                                po.nome AS nome_porteiro_saida,
+                                                pe.nome AS nome_responsavel,
+                                                cv.localizacao,
+                                                po.nome AS nome_porteiro_entrada,
+                                                pe.nome AS nome_responsavel_autorizacao,
+                                                cv.condicao_saida,
+                                                cv.condicao_entrada
+                                            FROM cs_controleVeiculo cv
+                                            INNER JOIN cs_veiculo ve 
+                                                ON cv.idVeiculo = ve.id
+                                            INNER JOIN cs_porteiro po 
+                                                ON cv.idPorteiroSaida = po.id
+                                            INNER JOIN alb_pessoal pe 
+                                                ON cv.idResponsavel = pe.chapa
+                                            ORDER BY
+                                                CASE 
+                                                    WHEN cv.data_chegada IS NULL 
+                                                    AND cv.horario_chegada IS NULL THEN 0
+                                                    ELSE 1
+                                                END,
+                                                CASE 
+                                        WHEN cv.data_chegada IS NULL THEN 0
+                                        ELSE 1
+                                    END,
+                                    cv.data_solicitacao DESC,
+                                    cv.horario_saida DESC;`
         )
         return resultado.recordset as ControleVeiculo[];
     }
