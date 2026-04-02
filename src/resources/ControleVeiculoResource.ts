@@ -121,33 +121,36 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
 
         const resultado = await request.query(`
                     SELECT 
-                        cv.id,
-                        ve.placa,
-                        cv.destino,
-                        cv.data_solicitacao,
-                        cv.horario_saida,
-                        cv.km_inicial_veiculo,
-                        cv.data_chegada,
-                        cv.horario_chegada,
-                        cv.km_final_veiculo,
-                        po.nome AS nome_porteiro_saida,
-                        pr_saida.nome AS nome_responsavel,
-                        pr_entrada.nome AS nome_responsavel_entrada,
-                        pa.nome AS nome_responsavel_autorizacao,
-                        cv.localizacao,
-                        cv.condicao_saida,
-                        cv.condicao_entrada
-                    FROM cs_controleVeiculo cv
-                    INNER JOIN cs_veiculo ve 
-                        ON cv.idVeiculo = ve.id
-                    INNER JOIN cs_porteiro po 
-                        ON cv.idPorteiroSaida = po.id
-                    INNER JOIN alb_pessoal pr_saida 
-                        ON cv.idResponsavel = pr_saida.chapa
-                    LEFT JOIN alb_pessoal pr_entrada 
-                        ON cv.idResponsavelEntrada = pr_entrada.chapa
-                    LEFT JOIN alb_pessoal pa 
-                        ON cv.idResponsavelAutorizacao = pa.chapa
+                    cv.id,
+                    ve.placa,
+                    cv.destino,
+                    cv.data_solicitacao,
+                    cv.horario_saida,
+                    cv.km_inicial_veiculo,
+                    cv.data_chegada,
+                    cv.horario_chegada,
+                    cv.km_final_veiculo,
+                    po.nome AS nome_porteiro_saida,
+                    pe.nome AS nome_porteiro_entrada,
+                    pr_saida.nome AS nome_responsavel,
+                    pr_entrada.nome AS nome_responsavel_entrada,
+                    pa.nome AS nome_responsavel_autorizacao,
+                    cv.localizacao,
+                    cv.condicao_saida,
+                    cv.condicao_entrada
+                FROM cs_controleVeiculo cv
+                INNER JOIN cs_veiculo ve 
+                    ON cv.idVeiculo = ve.id
+                INNER JOIN cs_porteiro po 
+                    ON cv.idPorteiroSaida = po.id
+                LEFT JOIN cs_porteiro pe 
+                    ON cv.idPorteiroEntrada = pe.id
+                INNER JOIN alb_pessoal pr_saida 
+                    ON cv.idResponsavel = pr_saida.chapa
+                LEFT JOIN alb_pessoal pr_entrada 
+                    ON cv.idResponsavelEntrada = pr_entrada.chapa
+                LEFT JOIN alb_pessoal pa 
+                    ON cv.idResponsavelAutorizacao = pa.chapa
                     ${filtroData}
                     ORDER BY
                         CASE 
