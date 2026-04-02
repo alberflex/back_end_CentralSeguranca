@@ -40,10 +40,10 @@ export class ControlePontoResource implements IControlePontoRepository {
         let filtroData = "";
 
         if (!dataInicio && !dataFim) {
-            filtroData = "WHERE CAST(cp.data AS DATE) = CAST(GETDATE() AS DATE)";
+            filtroData = "WHERE CAST(cp.data AS DATE) = CAST(GETDATE() AS DATE) OR horarioSaida IS NULL";
         }
         else if (dataInicio && dataFim) {
-            filtroData = "WHERE CAST(cp.data AS DATE) BETWEEN @dataInicio AND @dataFim";
+            filtroData = "WHERE CAST(cp.data AS DATE) BETWEEN @dataInicio AND @dataFim OR horarioSaida IS NULL";
             request.input("dataInicio", dataInicio);
             request.input("dataFim", dataFim);
         }

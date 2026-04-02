@@ -77,10 +77,10 @@ export class ControleAcessoResource implements IControleAcessoRepository {
         let filtroData = "";
 
         if (!dataInicio && !dataFim) {
-            filtroData = "WHERE CAST(ca.data_entrada AS DATE) = CAST(GETDATE() AS DATE)";
+            filtroData = "WHERE CAST(ca.data_entrada AS DATE) = CAST(GETDATE() AS DATE) OR data_saida IS NULL";
         }
         else if (dataInicio && dataFim) {
-            filtroData = "WHERE CAST(ca.data_entrada AS DATE) BETWEEN @dataInicio AND @dataFim";
+            filtroData = "WHERE CAST(ca.data_entrada AS DATE) BETWEEN @dataInicio AND @dataFim OR data_saida IS NULL";
             request.input("dataInicio", dataInicio);
             request.input("dataFim", dataFim);
         }
@@ -103,7 +103,13 @@ export class ControleAcessoResource implements IControleAcessoRepository {
                 INNER JOIN cs_visitante vi ON vi.id = ca.idVisitante
                 INNER JOIN cs_porteiro pe1 ON pe1.id = ca.idPorteiroEntrada
                 LEFT JOIN cs_porteiro pe2 ON pe2.id = ca.idPorteiroSaida
-                LEFT JOIN alb_pessoal pe ON pe.chapa = ca.responsavel ${filtroData};`);
+                LEFT JOIN alb_pessoal pe ON pe.chapa = ca.responsavel ${filtroData}
+                ORDER BY 
+                CASE 
+                    WHEN ca.data_saida IS NULL AND ca.hora_saida IS NULL THEN 0
+                    ELSE 1
+                END,
+                ca.data_entrada DESC;`);
         return resultado.recordset as ControleAcesso[];
     }
 
