@@ -126,16 +126,15 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                         cv.destino,
                         cv.data_solicitacao,
                         cv.horario_saida,
-                        cv.km_inicial_veiculo as km_inicial_veiculo,
+                        cv.km_inicial_veiculo,
                         cv.data_chegada,
                         cv.horario_chegada,
                         cv.km_final_veiculo,
                         po.nome AS nome_porteiro_saida,
-                        pe.nome AS nome_responsavel,
-                        pe.nome AS nome_responsavel_entrada,
+                        pr_saida.nome AS nome_responsavel,
+                        pr_entrada.nome AS nome_responsavel_entrada,
+                        pa.nome AS nome_responsavel_autorizacao,
                         cv.localizacao,
-                        po.nome AS nome_porteiro_entrada,
-                        pe.nome AS nome_responsavel_autorizacao,
                         cv.condicao_saida,
                         cv.condicao_entrada
                     FROM cs_controleVeiculo cv
@@ -143,8 +142,12 @@ export class ControleVeiculoResource implements IControleVeiculoRepository {
                         ON cv.idVeiculo = ve.id
                     INNER JOIN cs_porteiro po 
                         ON cv.idPorteiroSaida = po.id
-                    INNER JOIN alb_pessoal pe 
-                        ON cv.idResponsavel = pe.chapa
+                    INNER JOIN alb_pessoal pr_saida 
+                        ON cv.idResponsavel = pr_saida.chapa
+                    LEFT JOIN alb_pessoal pr_entrada 
+                        ON cv.idResponsavelEntrada = pr_entrada.chapa
+                    LEFT JOIN alb_pessoal pa 
+                        ON cv.idResponsavelAutorizacao = pa.chapa
                     ${filtroData}
                     ORDER BY
                         CASE 
