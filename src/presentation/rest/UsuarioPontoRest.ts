@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { UsuarioPontoService } from "../../services/UsuarioPonto";
+import { UsuarioPontoService } from "../../services/UsuarioPontoService";
 import { autenticarJWT } from "../../middleware/JWT";
 import { ErroAplicacao } from "../../utils/Erros";
 import { contextoMiddleware } from "../../middleware/contexto";
