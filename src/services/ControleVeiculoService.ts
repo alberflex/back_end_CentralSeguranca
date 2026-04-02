@@ -255,7 +255,8 @@ export class ControleVeiculoService extends BaseService {
                     <div class="content">
                         <p class="text-center">Registro de entrada de frota de veículos.</p>
                         <p><strong>Autorização:</strong> ${nomesResponsaveis.nome_responsavel_autorizacao}</p>
-                        <p><strong>Motorista:</strong> ${nomesResponsaveis.nome_responsavel}</p>
+                        <p><strong>Motorista Saída:</strong> ${nomesResponsaveis.nome_responsavel}</p>
+                        <p><strong>Motorista Retorno:</strong> ${nomesResponsaveis.nome_responsavel_entrada}</p>
                         <p><strong>Porteiro saída:</strong> ${nomesResponsaveis.nome_porteiro_saida}</p>
                         <p><strong>Porteiro entrada:</strong> ${nomesResponsaveis.nome_porteiro_entrada}</p>
                         <p><strong>Placa:</strong> ${veiculo.placa}</p>

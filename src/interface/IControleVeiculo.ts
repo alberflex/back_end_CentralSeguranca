@@ -5,6 +5,7 @@ export interface IControleVeiculo {
     km_final_veiculo: number;
     idPorteiroSaida: number;
     idResponsavel: string;
+    idResponsavelEntrada: string;
     localizacao: string;
     idPorteiroEntrada: number;
     idResponsavelAutorizacao: string;

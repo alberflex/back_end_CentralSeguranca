@@ -21,7 +21,6 @@ export class EmailService {
                 text: mensagem,
                 html: `<p>${mensagem}</p>`,
             });
-            console.log(`E-mail enviado: ${info.messageId}`);
         } catch (erro) {
             console.error(`Erro ao enviar e-mail:`, erro);
             throw erro;
