@@ -19,20 +19,13 @@ rotasVeiculo.post("/cadastroVeiculo", autenticarJWT, contextoMiddleware, async (
     }
 });
 
-rotasVeiculo.put("/editarVeiculo/:id",
-    upload.fields([{ name: "caminho_imagem_veiculo" }]),
-    autenticarJWT, contextoMiddleware,
+rotasVeiculo.put("/editarVeiculo/:id", upload.fields([{ name: "caminho_imagem_veiculo" }]), autenticarJWT, contextoMiddleware,
     async (req, res) => {
         try {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const veiculos: any = { km_atual: Number(req.body.km_atual), modelo: req.body.modelo };
 
-            if (!files?.caminho_imagem_veiculo) return res.status(400).json({ erro: "Foto do veiculo não enviada" });
-
-            const veiculos = {
-                km_atual: Number(req.body.km_atual),
-                modelo: req.body.modelo,
-                caminhoImagem: files.caminho_imagem_veiculo[0].path
-            };
+            if (files?.caminho_imagem_veiculo?.[0]) veiculos.caminhoImagem = files.caminho_imagem_veiculo[0].path;
 
             return res.status(200).json(await veiculoService.editarVeiculo(veiculos, parseInt(req.params.id, 10)));
         } catch (err) {

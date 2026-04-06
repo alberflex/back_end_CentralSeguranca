@@ -88,14 +88,19 @@ export class VeiculoService extends BaseService {
     }
 
     public async editarVeiculo(veiculo: VeiculoUpdate, id: number): Promise<VeiculoUpdate | null> {
-        const dadosEditados = await this.veiculoResource.editarVeiculo(veiculo, id)
+        const veiculoAtual = await this.veiculoResource.listarVeiculoPorId(id);
+        if (!veiculoAtual) throw new Error(`Veiculo por ID ${id} não encontrado`);
+
+        const caminhoImagemFinal = veiculo.caminhoImagem ? veiculo.caminhoImagem : veiculoAtual.caminhoImagem;
+        const dadosParaAtualizar: VeiculoUpdate = { ...veiculo, caminhoImagem: caminhoImagemFinal };
+        const dadosEditados = await this.veiculoResource.editarVeiculo(dadosParaAtualizar, id);
 
         this.logService.cadastrarLog({
             tela: ETelas.VEICULO,
             acao: EAcao.EDICAO,
             idUsuario: this.user.id,
             nomeUsuario: this.user.nome,
-            dadosAntes: await this.veiculoResource.listarVeiculoPorId(id),
+            dadosAntes: veiculoAtual,
             dadosDepois: dadosEditados
         });
 

@@ -79,6 +79,7 @@ export class VeiculoResource implements IVeiculoRepository {
                     caminho_imagem_veiculo = @caminho_imagem_veiculo,
                     km_atual = @km_atual,
                     modelo = @modelo
+                OUTPUT INSERTED.*
                 WHERE id = @id
             `);
 
