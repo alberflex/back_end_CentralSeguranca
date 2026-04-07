@@ -4,6 +4,7 @@ import { armazenamentoRedeMulter } from "../../utils/ArmazenamentoRede";
 import { ErroAplicacao } from "../../utils/Erros";
 import { autenticarJWT } from "../../middleware/JWT";
 import { contextoMiddleware } from "../../middleware/contexto";
+import { Veiculo, VeiculoUpdate } from "../../domain";
 import multer from "multer";
 
 const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VEICULOS\\");
@@ -11,21 +12,39 @@ const upload = multer({ storage: storage });
 const rotasVeiculo = Router();
 const veiculoService = new VeiculoService();
 
-rotasVeiculo.post("/cadastroVeiculo", upload.fields([{ name: "caminho_imagem_veiculo" }]), autenticarJWT, contextoMiddleware, async (req, res) => {
-    try {
-        return res.status(201).json(await veiculoService.cadastrarVeiculo(req.body));
-    } catch (err) {
-        if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
-    }
-});
-
-rotasVeiculo.put("/editarVeiculo/:id", upload.fields([{ name: "caminho_imagem_veiculo" }]), autenticarJWT, contextoMiddleware,
+rotasVeiculo.post(
+    "/cadastroVeiculo",
+    upload.single("caminho_imagem_veiculo"),
+    autenticarJWT,
+    contextoMiddleware,
     async (req, res) => {
         try {
-            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-            const veiculos: any = { km_atual: Number(req.body.km_atual), modelo: req.body.modelo };
+            let file = req.file;
 
-            if (files?.caminho_imagem_veiculo?.[0]) veiculos.caminhoImagem = files.caminho_imagem_veiculo[0].path;
+            const veiculo: Veiculo = {
+                placa: req.body.placa,
+                modelo: req.body.modelo,
+                km_atual: Number(req.body.km_atual),
+                caminho_imagem_veiculo: file?.path
+            };
+
+            return res.status(201).json(await veiculoService.cadastrarVeiculo(veiculo));
+        } catch (err: any) {
+            if (err instanceof ErroAplicacao) return res.status(err.statusCode).json({ erro: err.message });
+        }
+    });
+
+rotasVeiculo.put("/editarVeiculo/:id",
+    upload.single("caminho_imagem_veiculo"), autenticarJWT, contextoMiddleware,
+    async (req, res) => {
+        try {
+            let file = req.file;
+
+            const veiculos: VeiculoUpdate = {
+                modelo: req.body.modelo,
+                km_atual: Number(req.body.km_atual),
+                caminho_imagem_veiculo: file?.path
+            };
 
             return res.status(200).json(await veiculoService.editarVeiculo(veiculos, parseInt(req.params.id, 10)));
         } catch (err) {

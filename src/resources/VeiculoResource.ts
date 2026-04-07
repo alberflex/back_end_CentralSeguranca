@@ -63,6 +63,8 @@ export class VeiculoResource implements IVeiculoRepository {
                     OUTPUT INSERTED.*
                     VALUES (@placa, @caminho_imagem_veiculo, @km_atual, @modelo)
                 `);
+
+                console.log()
         return resultado.recordset?.[0];
     }
 

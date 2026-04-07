@@ -12,7 +12,7 @@ export class Veiculo {
     id?: number;
     placa: string;
     modelo: string;
-    caminho_imagem_veiculo: string;
+    caminho_imagem_veiculo: string | undefined;
     km_atual: number;
 
     constructor(properties: VeiculoObject) {
