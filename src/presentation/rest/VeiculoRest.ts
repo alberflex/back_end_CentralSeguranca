@@ -6,12 +6,12 @@ import { autenticarJWT } from "../../middleware/JWT";
 import { contextoMiddleware } from "../../middleware/contexto";
 import multer from "multer";
 
-const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VEICULOS");
+const storage = armazenamentoRedeMulter("\\\\192.168.7.226\\c$\\CENTRALSEGURANCA\\VEICULOS\\");
 const upload = multer({ storage: storage });
 const rotasVeiculo = Router();
 const veiculoService = new VeiculoService();
 
-rotasVeiculo.post("/cadastroVeiculo", autenticarJWT, contextoMiddleware, async (req, res) => {
+rotasVeiculo.post("/cadastroVeiculo", upload.fields([{ name: "caminho_imagem_veiculo" }]), autenticarJWT, contextoMiddleware, async (req, res) => {
     try {
         return res.status(201).json(await veiculoService.cadastrarVeiculo(req.body));
     } catch (err) {

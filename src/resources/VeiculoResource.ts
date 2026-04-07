@@ -56,7 +56,7 @@ export class VeiculoResource implements IVeiculoRepository {
         const pool = await conexaoMSSQL();
         const resultado = await pool.request()
             .input("placa", sql.VarChar(10), veiculo.placa)
-            .input("caminho_imagem_veiculo", sql.VarChar(500), veiculo.caminhoImagem)
+            .input("caminho_imagem_veiculo", sql.VarChar(500), veiculo.caminho_imagem_veiculo)
             .input("km_atual", sql.Float, veiculo.km_atual)
             .input("modelo", sql.VarChar(100), veiculo.modelo).query(`
                     INSERT INTO cs_veiculo (placa, caminho_imagem_veiculo, km_atual, modelo)
@@ -70,7 +70,7 @@ export class VeiculoResource implements IVeiculoRepository {
         const pool = await conexaoMSSQL();
         const resultado = await pool.request()
             .input("id", sql.Int, id)
-            .input("caminho_imagem_veiculo", sql.VarChar, veiculo.caminhoImagem)
+            .input("caminho_imagem_veiculo", sql.VarChar, veiculo.caminho_imagem_veiculo)
             .input("km_atual", sql.Int, veiculo.km_atual)
             .input("modelo", sql.VarChar, veiculo.modelo)
             .query(`
@@ -113,7 +113,14 @@ export class VeiculoResource implements IVeiculoRepository {
         const pool = await conexaoMSSQL();
         const resultado = await pool.request()
             .input("id", sql.Int, id)
-            .query(`SELECT * FROM cs_veiculo where id = @id`);
+            .query(` SELECT 
+                            id,
+                            placa,
+                            modelo,
+                            km_atual,
+                            caminho_imagem_veiculo
+                        FROM cs_veiculo 
+                        WHERE id = @id`);
 
         return resultado.recordset?.[0] as Veiculo;
     }

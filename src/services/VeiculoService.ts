@@ -3,6 +3,7 @@ import { EAcao } from "../enums/EAcao";
 import { ETelas } from "../enums/ETelas";
 import { BaseService } from "../helpers/BaseService";
 import { VeiculoResource } from "../resources/VeiculoResource";
+import { arquivoParaBase64 } from "../utils/ArquivoParaBase64";
 import { ErroAplicacao } from "../utils/Erros";
 import { LogService } from "./LogService";
 
@@ -77,10 +78,25 @@ export class VeiculoService extends BaseService {
     }
 
     public async listarVeiculoPorId(id: number): Promise<Veiculo> {
-        const buscarVeiculoPorID = await this.veiculoResource.listarVeiculoPorId(id)
-        if (!buscarVeiculoPorID) throw new ErroAplicacao(`Veículo por ID ${id} não encontrado`, 404);
+        const veiculoDb = await this.veiculoResource.listarVeiculoPorId(id);
+        if (!veiculoDb) throw new ErroAplicacao(`Veículo por ID ${id} não encontrado`, 404);
 
-        return buscarVeiculoPorID;
+        let caminhoImagemBase64: string | null = null;
+
+        if (veiculoDb.caminho_imagem_veiculo) {
+            const base64 = await arquivoParaBase64(veiculoDb.caminho_imagem_veiculo);
+            if (base64) caminhoImagemBase64 = base64;
+        }
+
+        const veiculoFormatado = {
+            id: veiculoDb.id,
+            placa: veiculoDb.placa,
+            modelo: veiculoDb.modelo,
+            km_atual: veiculoDb.km_atual,
+            caminho_imagem_veiculo: caminhoImagemBase64 ?? veiculoDb.caminho_imagem_veiculo
+        };
+
+        return veiculoFormatado as Veiculo;
     }
 
     public alteraKilometragem(id: number, kilometragem: number): Promise<Veiculo | null> {
@@ -91,8 +107,8 @@ export class VeiculoService extends BaseService {
         const veiculoAtual = await this.veiculoResource.listarVeiculoPorId(id);
         if (!veiculoAtual) throw new Error(`Veiculo por ID ${id} não encontrado`);
 
-        const caminhoImagemFinal = veiculo.caminhoImagem ? veiculo.caminhoImagem : veiculoAtual.caminhoImagem;
-        const dadosParaAtualizar: VeiculoUpdate = { ...veiculo, caminhoImagem: caminhoImagemFinal };
+        const caminhoImagemFinal = veiculo.caminho_imagem_veiculo ? veiculo.caminho_imagem_veiculo : veiculoAtual.caminho_imagem_veiculo;
+        const dadosParaAtualizar: VeiculoUpdate = { ...veiculo, caminho_imagem_veiculo: caminhoImagemFinal };
         const dadosEditados = await this.veiculoResource.editarVeiculo(dadosParaAtualizar, id);
 
         this.logService.cadastrarLog({
