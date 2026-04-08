@@ -165,7 +165,6 @@ export class ControleVeiculoService extends BaseService {
                 'almox.geral@alberflex.ind.br',
                 'marcio.vieira@alberflex.ind.br',
                 'ivan.junior@alberflex.ind.br',
-                'informatica@alberflex.com.br',
                 'portaria@alberflex.ind.br'
             ];
 
@@ -286,7 +285,6 @@ export class ControleVeiculoService extends BaseService {
                 'almox.geral@alberflex.ind.br',
                 'marcio.vieira@alberflex.ind.br',
                 'ivan.junior@alberflex.ind.br',
-                'informatica@alberflex.com.br',
                 'portaria@alberflex.ind.br'
             ];
 
