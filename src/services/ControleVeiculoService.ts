@@ -281,11 +281,11 @@ export class ControleVeiculoService extends BaseService {
             const objEmail = new EmailService();
 
             const destinatarios = [
-                'marcos.souza@alberflex.ind.br',
                 'almox.geral@alberflex.ind.br',
                 'marcio.vieira@alberflex.ind.br',
                 'ivan.junior@alberflex.ind.br',
-                'portaria@alberflex.ind.br'
+                'portaria@alberflex.ind.br',
+                'logistica@alberflex.com.br'
             ];
 
             for (const email of destinatarios) {
